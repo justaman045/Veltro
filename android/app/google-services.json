@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "823109031805",
+    "firebase_url": "https://moneycontroljustaman045-default-rtdb.firebaseio.com",
+    "project_id": "moneycontroljustaman045",
+    "storage_bucket": "moneycontroljustaman045.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:823109031805:android:9fb6d047fc753301295e14",
+        "android_client_info": {
+          "package_name": "app.vercel.justaman045.money_control"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "823109031805-p1vva6rolndnuufm4l0n70ogl9b5catq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "app.vercel.justaman045.money_control",
+            "certificate_hash": "74581fca384f745cf6a50fcd63d37f941face698"
+          }
+        },
+        {
+          "client_id": "823109031805-4m80cdq8t5a8n77524r0pk4i1ckhpb4u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBKlfOviJ6JFLW2BaLDlVblHqcqbDgIaUc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "823109031805-4m80cdq8t5a8n77524r0pk4i1ckhpb4u.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "823109031805-2a1nhfu6anoe1q2em3bda8qeu961g5ck.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "app.vercel.justaman045.moneyControl"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
