@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/settings_service.dart';
+import '../utils/app_colors.dart';
 
 class AppearanceView extends ConsumerStatefulWidget {
   const AppearanceView({super.key});
@@ -29,8 +30,8 @@ class _AppearanceViewState extends ConsumerState<AppearanceView> {
           const SizedBox(height: 16),
           Container(
             decoration: BoxDecoration(
-              color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(24),
+              gradient: context.subtleGradient,
               border: Border.all(
                 color: Theme.of(context).brightness == Brightness.dark 
                     ? Colors.white.withValues(alpha: 0.05) 

@@ -48,6 +48,20 @@ final dbServiceProvider = Provider<DbService>.internal(
 );
 
 typedef DbServiceRef = ProviderRef<DbService>;
+String _$aiServiceHash() => r'f81b1a08e738e21eb6df8dceaf97e3b779cdccda';
+
+/// See also [aiService].
+@ProviderFor(aiService)
+final aiServiceProvider = Provider<AiService>.internal(
+  aiService,
+  name: r'aiServiceProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$aiServiceHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef AiServiceRef = ProviderRef<AiService>;
 String _$timelineTasksHash() => r'88b193be4bc4523b2e8dce7393658789337a7070';
 
 /// Copied from Dart SDK
@@ -212,6 +226,51 @@ final todoTasksProvider = AutoDisposeStreamProvider<List<TimeTask>>.internal(
 );
 
 typedef TodoTasksRef = AutoDisposeStreamProviderRef<List<TimeTask>>;
+String _$allTasksHash() => r'ae539e5c2cba1c3bfb478f15b9515ef4bb1ea2c4';
+
+/// See also [allTasks].
+@ProviderFor(allTasks)
+final allTasksProvider = AutoDisposeFutureProvider<List<TimeTask>>.internal(
+  allTasks,
+  name: r'allTasksProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$allTasksHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef AllTasksRef = AutoDisposeFutureProviderRef<List<TimeTask>>;
+String _$templateTasksHash() => r'56bb404452d45f9582e15b37ca4a196233a42cc1';
+
+/// See also [templateTasks].
+@ProviderFor(templateTasks)
+final templateTasksProvider =
+    AutoDisposeStreamProvider<List<TimeTask>>.internal(
+  templateTasks,
+  name: r'templateTasksProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$templateTasksHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef TemplateTasksRef = AutoDisposeStreamProviderRef<List<TimeTask>>;
+String _$dailyBriefingHash() => r'0b28043f67a0676a2d943abdb53dfb50012feb69';
+
+/// See also [dailyBriefing].
+@ProviderFor(dailyBriefing)
+final dailyBriefingProvider = AutoDisposeFutureProvider<String>.internal(
+  dailyBriefing,
+  name: r'dailyBriefingProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$dailyBriefingHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef DailyBriefingRef = AutoDisposeFutureProviderRef<String>;
 String _$userProfileDataHash() => r'07c267d3103444a5152b2df13071b294af64ca79';
 
 /// See also [userProfileData].

@@ -1,11 +1,11 @@
 {
-    "name": "agentic_todo",
-    "short_name": "agentic_todo",
+    "name": "Agentic Todo",
+    "short_name": "AgenticTodo",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#007AFF",
+    "theme_color": "#007AFF",
+    "description": "AI-powered task manager with natural language creation, daily AI briefings, and smart scheduling.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

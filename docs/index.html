@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agentic Todo — AI-Powered Task Management</title>
+  <meta name="description" content="Agentic Todo is an AI-powered task manager with smart scheduling, natural language task creation, daily AI briefings, and Firebase sync.">
+  <meta property="og:title" content="Agentic Todo">
+  <meta property="og:description" content="AI-powered task manager with smart scheduling, natural language creation, and daily briefings.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif; background: #000; color: #fff; line-height: 1.6; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    nav { padding: 24px 0; display: flex; justify-content: space-between; align-items: center; }
+    nav .logo { font-size: 24px; font-weight: 800; letter-spacing: -1px; }
+    nav .logo span { color: #007AFF; }
+    nav a { color: #fff; text-decoration: none; margin-left: 24px; font-size: 14px; }
+    nav a:hover { color: #007AFF; }
+    .hero { padding: 120px 0 80px; text-align: center; }
+    .hero h1 { font-size: 64px; font-weight: 800; letter-spacing: -2px; line-height: 1.1; margin-bottom: 20px; }
+    .hero h1 span { background: linear-gradient(135deg, #007AFF, #FF2D55); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { font-size: 20px; color: #888; max-width: 600px; margin: 0 auto 40px; }
+    .hero .buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .btn { padding: 16px 32px; border-radius: 16px; font-size: 16px; font-weight: 600; text-decoration: none; display: inline-block; }
+    .btn-primary { background: linear-gradient(135deg, #007AFF, #FF2D55); color: #fff; }
+    .btn-secondary { background: #1C1C1E; color: #fff; border: 1px solid #333; }
+    .btn:hover { opacity: 0.9; }
+    .features { padding: 80px 0; }
+    .features h2 { text-align: center; font-size: 40px; font-weight: 800; margin-bottom: 60px; letter-spacing: -1px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+    .card { background: #1C1C1E; border-radius: 24px; padding: 32px; border: 1px solid #222; }
+    .card .icon { width: 48px; height: 48px; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 24px; }
+    .card h3 { font-size: 20px; font-weight: 700; margin-bottom: 12px; }
+    .card p { font-size: 14px; color: #888; }
+    .pricing { padding: 80px 0; }
+    .pricing h2 { text-align: center; font-size: 40px; font-weight: 800; margin-bottom: 60px; letter-spacing: -1px; }
+    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; max-width: 800px; margin: 0 auto; }
+    .pricing-card { background: #1C1C1E; border-radius: 24px; padding: 40px; border: 1px solid #222; }
+    .pricing-card.featured { border-color: #007AFF; position: relative; }
+    .pricing-card .badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #007AFF; padding: 4px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .pricing-card .price { font-size: 48px; font-weight: 800; margin: 20px 0; }
+    .pricing-card .price span { font-size: 16px; color: #888; font-weight: 400; }
+    .pricing-card ul { list-style: none; margin: 20px 0; }
+    .pricing-card ul li { padding: 8px 0; font-size: 14px; color: #aaa; }
+    .pricing-card ul li::before { content: '✓ '; color: #007AFF; }
+    .footer { text-align: center; padding: 40px 0; color: #555; font-size: 14px; }
+    .footer a { color: #555; text-decoration: underline; }
+    .footer a:hover { color: #888; }
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 36px; }
+      .hero p { font-size: 16px; }
+      nav a { margin-left: 12px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav>
+      <div class="logo">Agentic<span>Todo</span></div>
+      <div>
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+      </div>
+    </nav>
+
+    <section class="hero">
+      <h1>Tasks that<br><span>think for you</span></h1>
+      <p>AI-powered task manager with natural language creation, smart scheduling, daily briefings, and seamless cloud sync. The todo list that actually helps you get things done.</p>
+      <div class="buttons">
+        <a href="https://github.com/justaman045/agentic-todo/releases/latest" class="btn btn-primary">Download APK</a>
+        <a href="#features" class="btn btn-secondary">Learn More</a>
+      </div>
+    </section>
+
+    <section class="features" id="features">
+      <h2>Why Agentic Todo?</h2>
+      <div class="grid">
+        <div class="card">
+          <div class="icon" style="background: #007AFF20; color: #007AFF;">&#x2728;</div>
+          <h3>AI Task Creation</h3>
+          <p>Type naturally. "Buy groceries tomorrow at 5pm, high priority" — AI fills date, time, category, and priority automatically.</p>
+        </div>
+        <div class="card">
+          <div class="icon" style="background: #4AC28720; color: #4AC287;">&#x1F9F0;</div>
+          <h3>Task Breakdown</h3>
+          <p>Describe a goal like "Plan a weekend trip to Goa" and AI generates a complete project plan with multiple tasks and priorities.</p>
+        </div>
+        <div class="card">
+          <div class="icon" style="background: #FF2D5520; color: #FF2D55;">&#x1F4AC;</div>
+          <h3>Daily AI Briefing</h3>
+          <p>Get a smart morning briefing with today's top priority, scheduling suggestions, and productivity tips — generated fresh every day.</p>
+        </div>
+        <div class="card">
+          <div class="icon" style="background: #D4A83120; color: #D4A831;">&#x23F0;</div>
+          <h3>Smart Timeline</h3>
+          <p>Drag-and-drop tasks onto your timeline with 15-minute snap precision. See your entire day at a glance.</p>
+        </div>
+        <div class="card">
+          <div class="icon" style="background: #5B78E620; color: #5B78E6;">&#x2601;&#xFE0F;</div>
+          <h3>Cloud Sync</h3>
+          <p>Sign in with Google or email. All your tasks sync in real-time across devices via Firebase. Never lose your data.</p>
+        </div>
+        <div class="card">
+          <div class="icon" style="background: #9062D420; color: #9062D4;">&#x1F3AF;</div>
+          <h3>Pomodoro + Habits</h3>
+          <p>Built-in Pomodoro timer, recurring tasks, habit streaks, and productivity stats to keep you on track.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="pricing" id="pricing">
+      <h2>Simple Pricing</h2>
+      <div class="pricing-grid">
+        <div class="pricing-card">
+          <h3>Free</h3>
+          <div class="price">$0</div>
+          <ul>
+            <li>Unlimited task creation</li>
+            <li>Timeline view with drag-drop</li>
+            <li>Calendar view</li>
+            <li>Pomodoro timer</li>
+            <li>Up to 3 AI actions per day</li>
+            <li>Cloud sync</li>
+          </ul>
+          <a href="https://github.com/justaman045/agentic-todo/releases/latest" class="btn btn-secondary" style="width: 100%; text-align: center;">Get Started</a>
+        </div>
+        <div class="pricing-card featured">
+          <div class="badge">MOST POPULAR</div>
+          <h3>Pro</h3>
+          <div class="price">$2.99<span>/month</span></div>
+          <ul>
+            <li>Everything in Free</li>
+            <li>AI task breakdown &amp; planning</li>
+            <li>Unlimited AI actions</li>
+            <li>Task templates</li>
+            <li>Productivity stats &amp; insights</li>
+            <li>CSV export</li>
+            <li>Priority support</li>
+          </ul>
+          <a href="#" class="btn btn-primary" style="width: 100%; text-align: center;">Coming Soon</a>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>&copy; 2026 Agentic Todo. Built with Flutter &amp; Firebase. |
+        <a href="privacy.html">Privacy Policy</a> |
+        <a href="terms.html">Terms of Service</a></p>
+    </footer>
+  </div>
+</body>
+</html>

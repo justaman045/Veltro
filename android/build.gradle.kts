@@ -35,10 +35,10 @@ subprojects {
                 } catch (e: Exception) {}
 
                 try {
-                    ext.javaClass.getMethod("setCompileSdkVersion", Int::class.java).invoke(ext, 35)
+                    ext.javaClass.getMethod("setCompileSdkVersion", Int::class.java).invoke(ext, 36)
                 } catch (e: Exception) {
                     try {
-                        ext.javaClass.getMethod("setCompileSdkVersion", String::class.java).invoke(ext, "android-35")
+                        ext.javaClass.getMethod("setCompileSdkVersion", String::class.java).invoke(ext, "android-36")
                     } catch (ex: Exception) {}
                 }
             }

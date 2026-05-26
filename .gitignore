@@ -43,3 +43,19 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Local API key config — never commit these
+config.dev.json
+config.prod.json
+config.*.json
+
+# Release signing — never commit these
+*.keystore
+*.jks
+key.properties
+keystore.b64
+RELEASE_SECRETS.txt
+
+# Generated analysis — not part of app source
+github_repos_analysis.md
+github_repos_comprehensive_analysis.md

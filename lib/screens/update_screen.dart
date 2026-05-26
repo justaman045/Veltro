@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../controllers/update_controller.dart';
+import '../utils/app_colors.dart';
 
 class UpdateScreen extends StatelessWidget {
   final UpdateInfo updateInfo;
@@ -20,12 +21,8 @@ class UpdateScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? Colors.black : Colors.grey.shade50;
-    final textColor = isDark ? Colors.white : Colors.black87;
-    
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: const Text('Agentic Todo Updates'),
         backgroundColor: Colors.transparent,
@@ -38,18 +35,17 @@ class UpdateScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Dynamic Upgrade Visual Banner 
               Container(
                 height: 120,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                  gradient: context.subtleGradient,
                 ),
                 child: Center(
                   child: Icon(
                     Icons.system_update_rounded,
                     size: 64,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: context.gradientPrimary,
                   ),
                 ),
               ),
@@ -59,7 +55,7 @@ class UpdateScreen extends StatelessWidget {
               Text(
                 'A new version is here!',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: textColor),
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
               ),
               const SizedBox(height: 12),
               Text(
@@ -72,38 +68,51 @@ class UpdateScreen extends StatelessWidget {
               // Changelog Box Layout Target
               Text(
                 'What\'s New',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
               ),
               const SizedBox(height: 12),
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).cardTheme.color ?? (isDark ? const Color(0xFF1C1C1E) : Colors.white),
+                    color: Theme.of(context).cardTheme.color,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
                   ),
                   child: SingleChildScrollView(
                     child: Text(
                       updateInfo.changelog,
-                      style: TextStyle(fontSize: 15, color: isDark ? Colors.white70 : Colors.black87, height: 1.5),
+                      style: TextStyle(fontSize: 15, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8), height: 1.5),
                     ),
                   ),
                 ),
               ),
               const SizedBox(height: 24),
               
-              // GitHub Release Endpoint Trigger
-              ElevatedButton(
-                onPressed: () => _launchUpdateUrl(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 2,
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  gradient: context.primaryGradient,
+                  boxShadow: [
+                    BoxShadow(
+                      color: context.gradientPrimary.withValues(alpha: 0.3),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
-                child: const Text('Download App', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                child: ElevatedButton(
+                  onPressed: () => _launchUpdateUrl(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: Colors.white,
+                    shadowColor: Colors.transparent,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    elevation: 0,
+                  ),
+                  child: const Text('Download App', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                ),
               ),
               const SizedBox(height: 12),
               

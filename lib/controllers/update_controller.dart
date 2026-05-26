@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -29,7 +30,7 @@ class UpdateController {
     try {
       final packageInfo = await PackageInfo.fromPlatform();
       final currentVersionString =
-          packageInfo.version + '+' + packageInfo.buildNumber;
+          '${packageInfo.version}+${packageInfo.buildNumber}';
 
       // Ping GitHub Raw content CDN to fetch the CI/CD generated version payload
       final url = Uri.parse(
@@ -56,7 +57,7 @@ class UpdateController {
       }
     } catch (e) {
       // Catch socket exceptions quietly since offline users don't need update notifications
-      print('Network exception caught firing OTA check: $e');
+      debugPrint('Network exception caught firing OTA check: $e');
     }
     return null;
   }

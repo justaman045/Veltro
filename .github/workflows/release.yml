@@ -2,9 +2,7 @@ name: Build and Release Android APK
 
 on:
   push:
-    branches:
-      - master
-      - main
+    branches: [master, main]
 
 permissions:
   contents: write
@@ -12,84 +10,157 @@ permissions:
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
-
-    # Prevent infinite loop from automated version bump commits
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
 
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0          # full history needed for git log / git describe
           token: ${{ secrets.GITHUB_TOKEN }}
-          
+
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
-          distribution: 'zulu'
+          distribution: zulu
           java-version: '17'
-          
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
-          
-      - name: Bump Application Version
+          channel: stable
+
+      - name: Bump version from VERSION_BUMP
         run: |
-          CURRENT_VERSION=$(grep "^version: " pubspec.yaml | sed 's/version: //')
-          BASE_VERSION=$(echo $CURRENT_VERSION | cut -d+ -f1)
-          BUILD_NUMBER=$(echo $CURRENT_VERSION | cut -d+ -f2)
-          
-          MAJOR=$(echo $BASE_VERSION | cut -d. -f1)
-          MINOR=$(echo $BASE_VERSION | cut -d. -f2)
-          PATCH=$(echo $BASE_VERSION | cut -d. -f3)
-          
-          # Increment patch and build number
-          NEW_PATCH=$((PATCH + 1))
-          NEW_BUILD=$((BUILD_NUMBER + 1))
-          NEW_VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}+${NEW_BUILD}"
-          
-          echo "Bumping version from $CURRENT_VERSION to $NEW_VERSION"
-          
-          # Overwrite pubspec.yaml version
+          # Read the uncommented keyword from VERSION_BUMP
+          KEYWORD=$(grep -v '^#' VERSION_BUMP | tr -d '[:space:]')
+          if [ -z "$KEYWORD" ]; then
+            echo "::error::No keyword found in VERSION_BUMP. Uncomment one: major | minor | patch"
+            exit 1
+          fi
+          if [ "$KEYWORD" != "major" ] && [ "$KEYWORD" != "minor" ] && [ "$KEYWORD" != "patch" ]; then
+            echo "::error::Invalid keyword '$KEYWORD' in VERSION_BUMP. Must be: major, minor, or patch"
+            exit 1
+          fi
+
+          CURRENT=$(grep "^version: " pubspec.yaml | sed 's/version: //')
+          BASE=$(echo $CURRENT | cut -d+ -f1)
+          BUILD=$(echo $CURRENT | cut -d+ -f2)
+          MAJOR=$(echo $BASE | cut -d. -f1)
+          MINOR=$(echo $BASE | cut -d. -f2)
+          PATCH=$(echo $BASE | cut -d. -f3)
+
+          case "$KEYWORD" in
+            major) MAJOR=$((MAJOR+1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR+1)); PATCH=0 ;;
+            *)     PATCH=$((PATCH+1)) ;;
+          esac
+          BUILD=$((BUILD+1))
+          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}+${BUILD}"
+
+          echo "Bumping $CURRENT → $NEW_VERSION (type: $KEYWORD)"
           sed -i "s/^version: .*/version: ${NEW_VERSION}/" pubspec.yaml
-          
-          # Save for subsequent steps
+
+          # Comment out the used keyword in VERSION_BUMP, preserve the help block
+          sed -i "s/^$KEYWORD\$/# $KEYWORD  ← used for v${NEW_VERSION}/" VERSION_BUMP
+
           echo "NEW_VERSION=${NEW_VERSION}" >> $GITHUB_ENV
-          
-          # Generate the OTA Update target chunk for the Flutter networking API
-          echo "{\"version\": \"${NEW_VERSION}\", \"changelog\": \"Update to version ${NEW_VERSION}. General bug fixes and performance improvements.\", \"downloadUrl\": \"https://github.com/${{ github.repository }}/releases/download/v${NEW_VERSION}/app-release.apk\"}" > app_version.json
+
+      - name: Generate changelog from git commits
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$PREV_TAG" ]; then
+            RAW=$(git log --pretty=format:"- %s" HEAD)
+          else
+            RAW=$(git log --pretty=format:"- %s" "${PREV_TAG}..HEAD")
+          fi
+          # Filter out automated bump commits and [skip ci] noise
+          CHANGELOG=$(echo "$RAW" | grep -v "\[skip ci\]" | grep -v "^- chore: release" | head -30)
+          if [ -z "$CHANGELOG" ]; then
+            CHANGELOG="- General improvements and bug fixes"
+          fi
+          {
+            echo "CHANGELOG<<EOF"
+            echo "$CHANGELOG"
+            echo "EOF"
+          } >> $GITHUB_ENV
+
+      - name: Write app_version.json
+        env:
+          DOWNLOAD_URL: "https://github.com/${{ github.repository }}/releases/download/v${{ env.NEW_VERSION }}/app-release.apk"
+        run: |
+          python3 - <<'PYEOF'
+          import os, json
+          out = {
+            "version":     os.environ["NEW_VERSION"],
+            "changelog":   os.environ["CHANGELOG"],
+            "downloadUrl": os.environ["DOWNLOAD_URL"],
+          }
+          with open("app_version.json", "w") as f:
+              json.dump(out, f, indent=2)
+          print("Wrote app_version.json:", out)
+          PYEOF
+
+      - name: Setup release signing
+        if: ${{ env.KEYSTORE_BASE64 != '' }}
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > "${{ github.workspace }}/android/app/release.keystore"
+          echo "KEYSTORE_PATH=${{ github.workspace }}/android/app/release.keystore" >> $GITHUB_ENV
+          echo "STORE_PASSWORD=${{ secrets.STORE_PASSWORD }}"    >> $GITHUB_ENV
+          echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}"              >> $GITHUB_ENV
+          echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}"        >> $GITHUB_ENV
+
+      - name: Create build config from GitHub Secrets
+        env:
+          RC_KEY: ${{ secrets.REVENUECAT_API_KEY }}
+          OR_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          python3 -c "
+import json, os
+with open('config.ci.json', 'w') as f:
+    json.dump({
+        'REVENUECAT_API_KEY': os.environ['RC_KEY'],
+        'OPENROUTER_API_KEY': os.environ['OR_KEY'],
+    }, f)
+"
 
       - name: Install dependencies
         run: flutter pub get
-        
-      - name: Build APK (Release mode)
-        run: flutter build apk --release
-        
-      - name: Update README.md Download Link
-        run: |
-          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/v${NEW_VERSION}/app-release.apk"
-          BADGE_MARKDOWN="[![Download Latest APK](https://img.shields.io/badge/Download_APK_v${NEW_VERSION}-FCC624?style=for-the-badge\&logo=android\&logoColor=black)](${DOWNLOAD_URL})"
-          
-          # Replace content specifically between invisible HTML tags
-          sed -i "/<!-- LATEST_RELEASE_START -->/,/<!-- LATEST_RELEASE_END -->/c\<!-- LATEST_RELEASE_START -->\n\n${BADGE_MARKDOWN}\n\n<!-- LATEST_RELEASE_END -->" README.md
 
-      - name: Commit and Push Changes
+      - name: Run linter and tests
         run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add pubspec.yaml README.md app_version.json
-          
-          # The [skip ci] flag tells GitHub not to trigger another workflow from this automated push!
+          flutter analyze
+          flutter test
+
+      - name: Build release APK
+        run: flutter build apk --release --dart-define-from-file=config.ci.json
+
+      - name: Update README badge
+        run: |
+          BADGE="[![Download APK](https://img.shields.io/badge/Download_APK_v${NEW_VERSION}-FCC624?style=for-the-badge\&logo=android\&logoColor=black)](https://github.com/${{ github.repository }}/releases/download/v${NEW_VERSION}/app-release.apk)"
+          sed -i "/<!-- LATEST_RELEASE_START -->/,/<!-- LATEST_RELEASE_END -->/c\<!-- LATEST_RELEASE_START -->\n\n${BADGE}\n\n<!-- LATEST_RELEASE_END -->" README.md
+
+      - name: Commit version bump
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pubspec.yaml README.md app_version.json VERSION_BUMP
           git commit -m "chore: release v${NEW_VERSION} [skip ci]"
           git push
-          
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ env.NEW_VERSION }}
-          name: Release v${{ env.NEW_VERSION }}
-          # Path to output APK generated by flutter build apk
+          tag_name: "v${{ env.NEW_VERSION }}"
+          name: "v${{ env.NEW_VERSION }}"
+          body: |
+            ## What's changed
+            ${{ env.CHANGELOG }}
+
+            ---
+            📥 **[Download APK](https://github.com/${{ github.repository }}/releases/download/v${{ env.NEW_VERSION }}/app-release.apk)**
           files: build/app/outputs/flutter-apk/app-release.apk
           draft: false
           prerelease: false
-          generate_release_notes: true

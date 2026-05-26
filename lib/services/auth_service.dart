@@ -3,35 +3,33 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  
-  // Use the new singleton pattern required by google_sign_in 7.2.0
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
 
-  // Stream exposed for Riverpod to listen to Auth changes
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
-  // Current User
   User? get currentUser => _auth.currentUser;
 
   Future<UserCredential?> signInWithGoogle() async {
     try {
-      // 1. Initialize the singleton
       await _googleSignIn.initialize();
-      
-      // 2. Trigger the new authentication flow
-      final GoogleSignInAccount googleUser = await _googleSignIn.authenticate(
-        scopeHint: ['email']
-      ); // User canceled the sign-in
+      final googleUser = await _googleSignIn.authenticate(scopeHint: ['email']);
 
-      // 3. Extract tokens
-      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+      // Credential Manager on Android completes Firebase sign-in internally
+      // before authenticate() returns. Calling signInWithCredential() again
+      // with a stale token would sign the user back out — skip it.
+      if (_auth.currentUser != null) return null;
 
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        idToken: googleAuth.idToken,
+      final idToken = googleUser.authentication.idToken;
+      if (idToken == null) throw Exception('Could not retrieve Google credentials.');
+
+      return await _auth.signInWithCredential(
+        GoogleAuthProvider.credential(idToken: idToken),
       );
-
-      return await _auth.signInWithCredential(credential);
     } catch (e) {
+      final msg = e.toString().toLowerCase();
+      if (msg.contains('cancel') || msg.contains('canceled') || msg.contains('cancelled')) {
+        return null;
+      }
       throw Exception('Failed to sign in with Google: $e');
     }
   }
@@ -57,7 +55,6 @@ class AuthService {
   }
 
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
     await _auth.signOut();
   }
 
@@ -66,12 +63,33 @@ class AuthService {
     if (user != null) {
       try {
         await user.delete();
-        await _googleSignIn.signOut();
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'requires-recent-login') {
+          throw Exception('requires-recent-login');
+        }
+        throw Exception('Account deletion failed: ${e.message}');
       } catch (e) {
-        // App Store rules dictate developers must guide users on credential errors
-        throw Exception('Account deletion failed: $e. You may need to log out and log back in to verify your identity before deleting.');
+        throw Exception('Account deletion failed: $e');
       }
     }
+  }
+
+  Future<void> reauthenticateWithPassword(String password) async {
+    final user = _auth.currentUser;
+    if (user == null || user.email == null) throw Exception('No authenticated user');
+    final credential = EmailAuthProvider.credential(email: user.email!, password: password);
+    await user.reauthenticateWithCredential(credential);
+  }
+
+  Future<void> reauthenticateWithGoogle() async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('No authenticated user');
+    await _googleSignIn.initialize();
+    final googleUser = await _googleSignIn.authenticate(scopeHint: ['email']);
+    final idToken = googleUser.authentication.idToken;
+    if (idToken == null) throw Exception('Could not retrieve Google credentials.');
+    final credential = GoogleAuthProvider.credential(idToken: idToken);
+    await user.reauthenticateWithCredential(credential);
   }
 
   String _getFirebaseAuthErrorMessage(FirebaseAuthException e) {

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/settings_service.dart';
-import '../providers/providers.dart';
+import '../utils/app_colors.dart';
+
 class NotificationsView extends ConsumerWidget {
   const NotificationsView({super.key});
 
@@ -20,11 +20,11 @@ class NotificationsView extends ConsumerWidget {
         children: [
           Container(
             decoration: BoxDecoration(
-              color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(24),
+              gradient: context.subtleGradient,
               border: Border.all(
-                color: Theme.of(context).brightness == Brightness.dark 
-                    ? Colors.white.withValues(alpha: 0.05) 
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white.withValues(alpha: 0.05)
                     : Colors.black.withValues(alpha: 0.05),
               ),
               boxShadow: [
@@ -40,6 +40,7 @@ class NotificationsView extends ConsumerWidget {
               children: [
                 SwitchListTile(
                   title: const Text('Push Notifications', style: TextStyle(fontWeight: FontWeight.w500)),
+                  subtitle: const Text('Master switch for all app notifications'),
                   value: ref.watch(settingsServiceProvider).notificationsEnabled,
                   onChanged: (val) {
                     ref.read(settingsServiceProvider).setNotificationsEnabled(val);
@@ -48,26 +49,11 @@ class NotificationsView extends ConsumerWidget {
                 ),
                 const Divider(height: 1, indent: 20, endIndent: 20),
                 SwitchListTile(
-                  title: const Text('Email Notifications', style: TextStyle(fontWeight: FontWeight.w500)),
-                  value: ref.watch(userProfileDataProvider).value?['emailNotificationsEnabled'] == true,
-                  onChanged: (val) async {
-                    final user = ref.read(authServiceProvider).currentUser;
-                    if (user != null && user.email != null) {
-                      await FirebaseFirestore.instance
-                          .collection('users')
-                          .doc(user.email)
-                          .set({'emailNotificationsEnabled': val}, SetOptions(merge: true));
-                      ref.invalidate(userProfileDataProvider);
-                    }
-                  },
-                  activeThumbColor: Theme.of(context).colorScheme.primary,
-                ),
-                const Divider(height: 1, indent: 20, endIndent: 20),
-                SwitchListTile(
                   title: const Text('Task Reminders', style: TextStyle(fontWeight: FontWeight.w500)),
-                  value: true,
+                  subtitle: const Text('15-minute advance notice before tasks start'),
+                  value: ref.watch(settingsServiceProvider).taskRemindersEnabled,
                   onChanged: (val) {
-                    // Future roadmap
+                    ref.read(settingsServiceProvider).setTaskRemindersEnabled(val);
                   },
                   activeThumbColor: Theme.of(context).colorScheme.primary,
                 ),

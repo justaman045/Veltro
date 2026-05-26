@@ -1,32 +1,53 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'timeline_view.dart';
 import 'todo_view.dart';
+import 'calendar_view.dart';
 import '../widgets/task_entry_dialog.dart';
+import '../widgets/ai_task_breakdown_sheet.dart';
+import 'templates_view.dart';
+import 'pricing_view.dart';
 import 'package:get/get.dart';
 import '../controllers/update_controller.dart';
 import 'update_screen.dart';
+import '../utils/app_colors.dart';
+import '../utils/animations.dart';
+import '../services/notification_service.dart';
+import '../providers/providers.dart';
 
-class UnifiedScreen extends StatefulWidget {
+class UnifiedScreen extends ConsumerStatefulWidget {
   const UnifiedScreen({super.key});
 
   @override
-  State<UnifiedScreen> createState() => _UnifiedScreenState();
+  ConsumerState<UnifiedScreen> createState() => _UnifiedScreenState();
 }
 
-class _UnifiedScreenState extends State<UnifiedScreen> {
+class _UnifiedScreenState extends ConsumerState<UnifiedScreen> {
   int _currentIndex = 0;
 
   @override
   void initState() {
     super.initState();
+    _views = [
+      const TimelineView(),
+      const TodoView(),
+      CalendarView(onSwitchToTimeline: () => setState(() => _currentIndex = 0)),
+    ];
     _checkForUpdates();
+    _requestNotificationPermissions();
+  }
+
+  Future<void> _requestNotificationPermissions() async {
+    try {
+      await NotificationService().requestPermissions();
+    } catch (_) {}
   }
 
   Future<void> _checkForUpdates() async {
-    final updateInfo = await UpdateController.checkForUpdates();
-    if (updateInfo != null && updateInfo.hasUpdate) {
-      if (mounted) {
+    try {
+      final updateInfo = await UpdateController.checkForUpdates();
+      if (updateInfo != null && updateInfo.hasUpdate && mounted) {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -34,10 +55,7 @@ class _UnifiedScreenState extends State<UnifiedScreen> {
             title: const Text('New Update Available!'),
             content: Text('Agentic Todo version ${updateInfo.latestVersion} has been released on GitHub and is ready to download.'),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Later', style: TextStyle(color: Colors.grey)),
-              ),
+              TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Later', style: TextStyle(color: Colors.grey))),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(context).colorScheme.primary,
@@ -54,47 +72,138 @@ class _UnifiedScreenState extends State<UnifiedScreen> {
           ),
         );
       }
-    }
+    } catch (_) {}
   }
 
-  final List<Widget> _views = const [
-    TimelineView(),
-    TodoView(),
-  ];
+  late final List<Widget> _views;
+
+  void _openNewTask() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const TaskEntryDialog(),
+    );
+  }
+
+  void _openAiBreakdown() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const AiTaskBreakdownSheet(),
+    );
+  }
+
+  void _openTemplates() {
+    final isPro = ref.read(subscriptionServiceProvider).isPro;
+    if (isPro) {
+      Get.to(() => const TemplatesView());
+    } else {
+      Get.to(() => const PricingView());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      extendBody: true, // Allow content to scroll under frosted glass
+      extendBody: true,
       body: SafeArea(
         bottom: false,
-        child: _views[_currentIndex],
-      ),
-      floatingActionButton: Container(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
+        child: AnimatedSwitcher(
+          duration: animDuration(context, ms: 300),
+          switchInCurve: Curves.easeOut,
+          switchOutCurve: Curves.easeIn,
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0.03, 0),
+                end: Offset.zero,
+              ).animate(animation),
+              child: child,
             ),
-          ],
+          ),
+          child: KeyedSubtree(key: ValueKey(_currentIndex), child: _views[_currentIndex]),
         ),
-        child: FloatingActionButton(
-          onPressed: () {
-            showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              backgroundColor: Colors.transparent,
-              builder: (context) => const TaskEntryDialog(),
-            );
-          },
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          elevation: 0,
-          shape: const CircleBorder(),
-          child: const Icon(Icons.add, color: Colors.white, size: 30),
+      ),
+      floatingActionButton: GestureDetector(
+        onLongPress: () {
+          Get.bottomSheet(
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
+                borderRadius: const BorderRadius.only(topLeft: Radius.circular(32), topRight: Radius.circular(32)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    width: 40, height: 4,
+                    margin: const EdgeInsets.only(bottom: 24),
+                    decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
+                    alignment: Alignment.center,
+                  ),
+                  Text('Quick Actions', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
+                  const SizedBox(height: 20),
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: context.gradientPrimary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(Icons.auto_awesome, color: context.gradientPrimary),
+                    ),
+                    title: const Text('AI Task Breakdown', style: TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text('Break a goal into tasks', style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      Get.back();
+                      _openAiBreakdown();
+                    },
+                  ),
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: context.gradientSecondary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(Icons.content_copy_rounded, color: context.gradientSecondary),
+                    ),
+                    title: const Text('Templates', style: TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text('Reuse saved task templates', style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      Get.back();
+                      _openTemplates();
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: context.primaryGradient,
+            boxShadow: [
+              BoxShadow(color: context.gradientPrimary.withValues(alpha: 0.3), blurRadius: 16, offset: const Offset(0, 8)),
+            ],
+          ),
+          child: FloatingActionButton(
+            onPressed: _openNewTask,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            shape: const CircleBorder(),
+            tooltip: 'Hold for more options',
+            child: const Icon(Icons.add, color: Colors.white, size: 30),
+          ),
         ),
       ),
       bottomNavigationBar: ClipRRect(
@@ -102,13 +211,8 @@ class _UnifiedScreenState extends State<UnifiedScreen> {
           filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
           child: Container(
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.75), // Translucent surface
-              border: Border(
-                top: BorderSide(
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1), // Gentle dividing line
-                  width: 0.5, // Hairline border
-                ),
-              ),
+              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.75),
+              border: Border(top: BorderSide(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1), width: 0.5)),
             ),
             child: SafeArea(
               child: NavigationBar(
@@ -116,19 +220,22 @@ class _UnifiedScreenState extends State<UnifiedScreen> {
                 elevation: 0,
                 backgroundColor: Colors.transparent,
                 selectedIndex: _currentIndex,
-                onDestinationSelected: (index) {
-                  setState(() {
-                    _currentIndex = index;
-                  });
-                },
+                onDestinationSelected: (index) => setState(() => _currentIndex = index),
                 destinations: [
                   NavigationDestination(
-                    icon: Icon(Icons.timeline_rounded, color: _currentIndex == 0 ? Theme.of(context).colorScheme.primary : Colors.grey),
+                    icon: const Icon(Icons.timeline_rounded),
+                    selectedIcon: Icon(Icons.timeline_rounded, color: Theme.of(context).colorScheme.primary),
                     label: 'Timeline',
                   ),
                   NavigationDestination(
-                    icon: Icon(Icons.check_box_rounded, color: _currentIndex == 1 ? Theme.of(context).colorScheme.primary : Colors.grey),
+                    icon: const Icon(Icons.check_box_rounded),
+                    selectedIcon: Icon(Icons.check_box_rounded, color: Theme.of(context).colorScheme.primary),
                     label: 'Todos',
+                  ),
+                  NavigationDestination(
+                    icon: const Icon(Icons.calendar_month_rounded),
+                    selectedIcon: Icon(Icons.calendar_month_rounded, color: Theme.of(context).colorScheme.primary),
+                    label: 'Calendar',
                   ),
                 ],
               ),

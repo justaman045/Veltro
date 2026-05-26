@@ -1,53 +1,106 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
 import 'services/db_service.dart';
 import 'services/notification_service.dart';
 import 'services/settings_service.dart';
+import 'services/subscription_service.dart';
+import 'services/ai_service.dart';
 import 'providers/providers.dart';
 import 'screens/unified_screen.dart';
-import 'screens/auth_view.dart';
+import 'screens/login_view.dart';
+import 'screens/signup_view.dart';
+import 'screens/splash_screen.dart';
+import 'screens/onboarding_view.dart';
+
+final appReady = Completer<void>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp();
-  
-  // Pass all uncaught "fatal" errors from the framework to Crashlytics
-  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
-  
-  // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
-  PlatformDispatcher.instance.onError = (error, stack) {
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-    return true;
-  };
+  try {
+    await Firebase.initializeApp();
 
-  final dbService = DbService();
-  await dbService.init();
+    FirebaseFirestore.instance.settings = const Settings(persistenceEnabled: true);
 
-  await NotificationService().init();
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
+  } catch (e) {
+    debugPrint('Firebase init failed: $e — running without Firebase/Crashlytics');
+  }
 
   final prefs = await SharedPreferences.getInstance();
+
+  DbService? dbService;
+  SubscriptionService? subService;
+  AiService? aiService;
+
+  try {
+    dbService = DbService();
+    await dbService.init();
+
+    try {
+      await NotificationService().init();
+    } catch (e) {
+      debugPrint('Notification init failed: $e — running without notifications');
+    }
+
+    const rcApiKey = String.fromEnvironment('REVENUECAT_API_KEY');
+    const openRouterKey = String.fromEnvironment('OPENROUTER_API_KEY');
+
+    if (rcApiKey.isEmpty || openRouterKey.isEmpty) {
+      debugPrint(
+        'Missing --dart-define arguments: REVENUECAT_API_KEY, OPENROUTER_API_KEY — '
+        'running without purchase/AI support',
+      );
+    } else {
+      subService = SubscriptionService();
+      try {
+        final user = FirebaseAuth.instance.currentUser;
+        await subService.init(apiKey: rcApiKey, appUserId: user?.uid);
+      } catch (e) {
+        debugPrint('RevenueCat init failed: $e — running without purchase support');
+      }
+
+      final savedModel = prefs.getString('openRouterModel') ?? 'openai/gpt-oss-120b:free';
+      aiService = AiService(openRouterKey, model: savedModel);
+    }
+  } catch (e) {
+    debugPrint('Startup error: $e — running in degraded mode');
+  } finally {
+    appReady.complete();
+  }
 
   runApp(
     ProviderScope(
       overrides: [
-        dbServiceProvider.overrideWithValue(dbService),
+        if (dbService != null) dbServiceProvider.overrideWithValue(dbService),
+        if (aiService != null) aiServiceProvider.overrideWithValue(aiService),
+        if (subService != null) subscriptionServiceProvider.overrideWithValue(subService),
         sharedPreferencesProvider.overrideWithValue(prefs),
       ],
-      child: const MyApp(),
+      child: MyApp(prefs: prefs),
     ),
   );
 }
 
 class MyApp extends ConsumerWidget {
-  const MyApp({super.key});
+  final SharedPreferences prefs;
+
+  const MyApp({super.key, required this.prefs});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -165,30 +218,62 @@ class MyApp extends ConsumerWidget {
         ),
       ),
       themeMode: currentThemeMode,
-      home: Consumer(
-        builder: (context, ref, child) {
-          final authStateAsync = ref.watch(authStateProvider);
+      home: _AuthGate(prefs: prefs),
+    );
+  }
+}
 
-          return authStateAsync.when(
-            data: (user) {
-              final db = ref.read(dbServiceProvider);
-              if (user != null) {
-                // Instantly sync cloud tasks to local isar database upon successful login
-                db.startCloudSync(user);
-                return const UnifiedScreen();
-              } else {
-                db.stopCloudSync();
-                return const AuthView();
-              }
-            },
-            loading: () => const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            ),
-            error: (e, st) =>
-                Scaffold(body: Center(child: Text('Auth Error: $e'))),
-          );
-        },
-      ),
+class _AuthGate extends StatefulWidget {
+  final SharedPreferences prefs;
+
+  const _AuthGate({required this.prefs});
+
+  @override
+  State<_AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<_AuthGate> {
+  bool _showSignUp = false;
+  bool? _onboardingComplete;
+
+  @override
+  void initState() {
+    super.initState();
+    _onboardingComplete = widget.prefs.getBool('onboarding_complete') ?? false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: appReady.future,
+      builder: (context, readySnapshot) {
+        if (readySnapshot.connectionState != ConnectionState.done) {
+          return const SplashScreen();
+        }
+
+        if (_onboardingComplete == false) {
+          return OnboardingView(onComplete: () {
+            setState(() => _onboardingComplete = true);
+          });
+        }
+
+        return StreamBuilder<User?>(
+          stream: FirebaseAuth.instance.authStateChanges(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting || _onboardingComplete == null) {
+              return const SplashScreen();
+            }
+            final user = snapshot.data;
+            if (user != null) {
+              return const UnifiedScreen();
+            }
+            if (_showSignUp) {
+              return SignUpView(onSignIn: () => setState(() => _showSignUp = false));
+            }
+            return LoginView(onSignUp: () => setState(() => _showSignUp = true));
+          },
+        );
+      },
     );
   }
 }
