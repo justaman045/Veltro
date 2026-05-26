@@ -87,7 +87,7 @@ jobs:
 
       - name: Write app_version.json
         env:
-          DOWNLOAD_URL: "https://github.com/${{ github.repository }}/releases/download/v${{ env.NEW_VERSION }}/app-release.apk"
+          DOWNLOAD_URL: "https://github.com/${{ github.repository }}/releases/download/v${{ env.NEW_VERSION }}/app-arm64-v8a-release.apk"
         run: |
           python3 - <<'PYEOF'
           import os, json
@@ -134,12 +134,12 @@ jobs:
           flutter analyze
           flutter test
 
-      - name: Build release APK
-        run: flutter build apk --release --dart-define-from-file=config.ci.json
+      - name: Build release APKs (split by ABI)
+        run: flutter build apk --release --split-per-abi --dart-define-from-file=config.ci.json
 
       - name: Update README badge
         run: |
-          export BADGE="[![Download APK](https://img.shields.io/badge/Download_APK_v${NEW_VERSION}-FCC624?style=for-the-badge&logo=android&logoColor=black)](https://github.com/${{ github.repository }}/releases/download/v${NEW_VERSION}/app-release.apk)"
+          export BADGE="[![Download APK](https://img.shields.io/badge/Download_APK_v${NEW_VERSION}-FCC624?style=for-the-badge&logo=android&logoColor=black)](https://github.com/${{ github.repository }}/releases/download/v${NEW_VERSION}/app-arm64-v8a-release.apk)"
           python3 - <<'PYEOF'
           import re, os
           badge = os.environ['BADGE']
@@ -174,7 +174,10 @@ jobs:
             ${{ env.CHANGELOG }}
 
             ---
-            📥 **[Download APK](https://github.com/${{ github.repository }}/releases/download/v${{ env.NEW_VERSION }}/app-release.apk)**
-          files: build/app/outputs/flutter-apk/app-release.apk
+            📥 **[Download APK (arm64-v8a)](https://github.com/${{ github.repository }}/releases/download/v${{ env.NEW_VERSION }}/app-arm64-v8a-release.apk)**
+          files: |
+            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+            build/app/outputs/flutter-apk/app-x86_64-release.apk
           draft: false
           prerelease: false
