@@ -7,6 +7,9 @@
 [![Platform: iOS](https://img.shields.io/badge/Platform-iOS-000000?logo=apple)](https://apple.com)
 
 <!-- LATEST_RELEASE_START -->
+
+[![Download APK](https://img.shields.io/badge/Download_APK_v1.0.1+2-FCC624?style=for-the-badge&logo=android&logoColor=black)](https://github.com/justaman045/Agentic-TODO/releases/download/v1.0.1+2/app-release.apk)
+
 <!-- LATEST_RELEASE_END -->
 
 An AI-powered task manager built with Flutter and Firebase — featuring smart timeline scheduling, habit streaks, Pomodoro focus sessions, recurring tasks, and real-time sync across devices.
