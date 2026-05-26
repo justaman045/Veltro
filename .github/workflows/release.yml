@@ -139,7 +139,7 @@ jobs:
 
       - name: Update README badge
         run: |
-          BADGE="[![Download APK](https://img.shields.io/badge/Download_APK_v${NEW_VERSION}-FCC624?style=for-the-badge&logo=android&logoColor=black)](https://github.com/${{ github.repository }}/releases/download/v${NEW_VERSION}/app-release.apk)"
+          export BADGE="[![Download APK](https://img.shields.io/badge/Download_APK_v${NEW_VERSION}-FCC624?style=for-the-badge&logo=android&logoColor=black)](https://github.com/${{ github.repository }}/releases/download/v${NEW_VERSION}/app-release.apk)"
           python3 - <<'PYEOF'
           import re, os
           badge = os.environ['BADGE']
