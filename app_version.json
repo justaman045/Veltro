@@ -1,5 +1,5 @@
 {
-  "version": "1.0.1+2",
-  "changelog": "- fix(release): export BADGE so Python heredoc can read it\n- fix(build): add Play Core proguard keep rule for R8\n- fix(release): use heredoc for inline Python to fix YAML parsing\n- fix(release): replace fragile sed with Python for README badge injection\n- chore: add firebase.json config for firestore rules deployment\n- feat: complete v1 feature set \u2014 AI, subscriptions, onboarding, pomodoro, templates, animations\n- Version 1 of Agentic TODO",
-  "downloadUrl": "https://github.com/justaman045/Agentic-TODO/releases/download/v1.0.1+2/app-release.apk"
+  "version": "1.0.2+3",
+  "changelog": "- chore: re-enable VERSION_BUMP (patch)\n- perf(apk): split ABIs, add R8 full mode to reduce APK size",
+  "downloadUrl": "https://github.com/justaman045/Agentic-TODO/releases/download/v1.0.2+3/app-arm64-v8a-release.apk"
 }

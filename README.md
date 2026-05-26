@@ -8,7 +8,7 @@
 
 <!-- LATEST_RELEASE_START -->
 
-[![Download APK](https://img.shields.io/badge/Download_APK_v1.0.1+2-FCC624?style=for-the-badge&logo=android&logoColor=black)](https://github.com/justaman045/Agentic-TODO/releases/download/v1.0.1+2/app-release.apk)
+[![Download APK](https://img.shields.io/badge/Download_APK_v1.0.2+3-FCC624?style=for-the-badge&logo=android&logoColor=black)](https://github.com/justaman045/Agentic-TODO/releases/download/v1.0.2+3/app-arm64-v8a-release.apk)
 
 <!-- LATEST_RELEASE_END -->
 
