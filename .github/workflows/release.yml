@@ -139,8 +139,22 @@ with open('config.ci.json', 'w') as f:
 
       - name: Update README badge
         run: |
-          BADGE="[![Download APK](https://img.shields.io/badge/Download_APK_v${NEW_VERSION}-FCC624?style=for-the-badge\&logo=android\&logoColor=black)](https://github.com/${{ github.repository }}/releases/download/v${NEW_VERSION}/app-release.apk)"
-          sed -i "/<!-- LATEST_RELEASE_START -->/,/<!-- LATEST_RELEASE_END -->/c\<!-- LATEST_RELEASE_START -->\n\n${BADGE}\n\n<!-- LATEST_RELEASE_END -->" README.md
+          BADGE="[![Download APK](https://img.shields.io/badge/Download_APK_v${NEW_VERSION}-FCC624?style=for-the-badge&logo=android&logoColor=black)](https://github.com/${{ github.repository }}/releases/download/v${NEW_VERSION}/app-release.apk)"
+          python3 -c "
+import re, os
+badge = os.environ['BADGE']
+with open('README.md') as f:
+    content = f.read()
+content = re.sub(
+    r'<!-- LATEST_RELEASE_START -->.*?<!-- LATEST_RELEASE_END -->',
+    f'<!-- LATEST_RELEASE_START -->\n\n{badge}\n\n<!-- LATEST_RELEASE_END -->',
+    content,
+    flags=re.DOTALL,
+)
+with open('README.md', 'w') as f:
+    f.write(content)
+print('Badge injected into README.md')
+"
 
       - name: Commit version bump
         run: |
