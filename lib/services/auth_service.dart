@@ -12,12 +12,7 @@ class AuthService {
   Future<UserCredential?> signInWithGoogle() async {
     try {
       await _googleSignIn.initialize();
-      final googleUser = await _googleSignIn.authenticate(scopeHint: ['email']);
-
-      // Credential Manager on Android completes Firebase sign-in internally
-      // before authenticate() returns. Calling signInWithCredential() again
-      // with a stale token would sign the user back out — skip it.
-      if (_auth.currentUser != null) return null;
+      final googleUser = await _googleSignIn.authenticate(scopeHint: ['openid', 'email', 'profile']);
 
       final idToken = googleUser.authentication.idToken;
       if (idToken == null) throw Exception('Could not retrieve Google credentials.');
@@ -85,7 +80,7 @@ class AuthService {
     final user = _auth.currentUser;
     if (user == null) throw Exception('No authenticated user');
     await _googleSignIn.initialize();
-    final googleUser = await _googleSignIn.authenticate(scopeHint: ['email']);
+    final googleUser = await _googleSignIn.authenticate(scopeHint: ['openid', 'email', 'profile']);
     final idToken = googleUser.authentication.idToken;
     if (idToken == null) throw Exception('Could not retrieve Google credentials.');
     final credential = GoogleAuthProvider.credential(idToken: idToken);
