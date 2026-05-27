@@ -58,23 +58,18 @@ void main() async {
       debugPrint('Notification init failed: $e — running without notifications');
     }
 
-    const rcApiKey = String.fromEnvironment('REVENUECAT_API_KEY');
+    subService = SubscriptionService();
+    try {
+      await subService.init(dbService);
+    } catch (e) {
+      debugPrint('SubscriptionService init failed: $e');
+    }
+
     const openRouterKey = String.fromEnvironment('OPENROUTER_API_KEY');
 
-    if (rcApiKey.isEmpty || openRouterKey.isEmpty) {
-      debugPrint(
-        'Missing --dart-define arguments: REVENUECAT_API_KEY, OPENROUTER_API_KEY — '
-        'running without purchase/AI support',
-      );
+    if (openRouterKey.isEmpty) {
+      debugPrint('Missing --dart-define: OPENROUTER_API_KEY — running without AI support');
     } else {
-      subService = SubscriptionService();
-      try {
-        final user = FirebaseAuth.instance.currentUser;
-        await subService.init(apiKey: rcApiKey, appUserId: user?.uid);
-      } catch (e) {
-        debugPrint('RevenueCat init failed: $e — running without purchase support');
-      }
-
       final savedModel = prefs.getString('openRouterModel') ?? 'openai/gpt-oss-120b:free';
       aiService = AiService(openRouterKey, model: savedModel);
     }

@@ -245,25 +245,11 @@ class _TodoViewState extends ConsumerState<TodoView> {
                               count: highPriority.length,
                               color: TimeTask.priorityColors[TaskPriority.high]!,
                             ),
-                            _TodoGroup(tasks: highPriority, ref: ref),
-                            const SizedBox(height: 16),
-                          ],
-                          if (mediumPriority.isNotEmpty) ...[
-                            _PriorityHeader(
-                              label: 'Medium Priority',
-                              count: mediumPriority.length,
-                              color: TimeTask.priorityColors[TaskPriority.medium]!,
-                            ),
-                            _TodoGroup(tasks: mediumPriority, ref: ref),
-                            const SizedBox(height: 16),
-                          ],
-                          if (lowPriority.isNotEmpty) ...[
-                            _PriorityHeader(
-                              label: 'Low Priority',
-                              count: lowPriority.length,
-                              color: TimeTask.priorityColors[TaskPriority.low]!,
-                            ),
-                            _TodoGroup(tasks: lowPriority, ref: ref),
+                            _TodoGroup(tasks: highPriority),
+
+                            _TodoGroup(tasks: mediumPriority),
+
+                            _TodoGroup(tasks: lowPriority),
                             const SizedBox(height: 16),
                           ],
                           // Completed collapsible
@@ -438,12 +424,11 @@ class _PriorityHeader extends StatelessWidget {
 
 class _TodoGroup extends ConsumerWidget {
   final List<TimeTask> tasks;
-  final WidgetRef ref;
 
-  const _TodoGroup({required this.tasks, required this.ref});
+  const _TodoGroup({required this.tasks});
 
   @override
-  Widget build(BuildContext context, WidgetRef widgetRef) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       clipBehavior: Clip.antiAlias,
@@ -467,7 +452,7 @@ class _TodoGroup extends ConsumerWidget {
                 child: const Icon(Icons.delete_outline, color: Colors.white, size: 28),
               ),
               confirmDismiss: (direction) async {
-                final db = widgetRef.read(dbServiceProvider);
+                final db = ref.read(dbServiceProvider);
                 if (task.recurrence != RecurrenceType.none) {
                   final result = await Get.dialog<String>(
                     AlertDialog(

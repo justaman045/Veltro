@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:purchases_flutter/purchases_flutter.dart';
 import '../models/time_task.dart';
 import '../services/db_service.dart';
 import '../services/auth_service.dart';
@@ -37,8 +35,12 @@ final isProProvider = StreamProvider<bool>((ref) {
   return ref.watch(subscriptionServiceProvider).isProStream;
 });
 
-final offeringsProvider = FutureProvider<Offerings?>((ref) {
-  return ref.watch(subscriptionServiceProvider).getOfferings();
+final isAdminProvider = StreamProvider<bool>((ref) {
+  return ref.watch(subscriptionServiceProvider).isAdminStream;
+});
+
+final tierProvider = StreamProvider<String>((ref) {
+  return ref.watch(subscriptionServiceProvider).tierStream;
 });
 
 @Riverpod(keepAlive: true)
@@ -98,14 +100,8 @@ Future<Map<String, dynamic>?> userProfileData(UserProfileDataRef ref) async {
   if (user == null || user.email == null) return null;
 
   try {
-    final doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.email)
-        .get();
-
-    if (doc.exists) {
-      return doc.data();
-    }
+    final db = ref.watch(dbServiceProvider);
+    return db.getUserDocData(user.email!);
   } catch (e) {
     debugPrint('Error fetching user profile data: $e');
   }

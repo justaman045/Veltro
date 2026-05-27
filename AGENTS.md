@@ -45,19 +45,24 @@
 | `DbService` | `lib/services/db_service.dart` | Firestore CRUD on `users/{email}/tasks`, templates at `users/{email}/templates`. MergeOpts pattern. |
 | `SettingsService` | `lib/services/settings_service.dart` | `ChangeNotifier` backed by `SharedPreferences`. Both `sharedPreferencesProvider` and `settingsServiceProvider` declared here, **not** in `providers.dart`. |
 | `NotificationService` | `lib/services/notification_service.dart` | Singleton. 15-min-before reminders via `flutter_local_notifications`. Uses stable hashing (`_stableId`). |
-| `SubscriptionService` | `lib/services/subscription_service.dart` | Singleton wrapping RevenueCat v9. Exposes `isPro` (sync bool), `isProStream` (broadcast `Stream<bool>`), `getOfferings()`, `purchasePackage()`, `restorePurchases()`. |
+| `SubscriptionService` | `lib/services/subscription_service.dart` | Firestore-backed tier system. Reads `userProfiles/{email}` doc for `tier` field and `isAdmin` flag. Exposes `tier`, `isPro`, `isProMax`, `isAdmin`, plus streams. Admin can set any user's tier via `setTier(email, tier)`. |
 | `AiService` | `lib/services/ai_service.dart` | OpenRouter HTTP client (`openai/gpt-oss-120b:free`). Rate-limited (2s interval). |
 
-## RevenueCat & Subscriptions
+## Subscriptions (Firestore-backed)
 
-- **RevenueCat v9 API** — `Purchases.configure(PurchasesConfiguration(apiKey))` with `config.appUserID = userId` as property.
-- **Key embedding** — `String.fromEnvironment('REVENUECAT_API_KEY')`. Override with `--dart-define-from-file=config.*.json` for each environment.
+- **Tiers**: `free` / `pro` / `proMax`. Stored as `tier` field on `userProfiles/{email}` doc in Firestore.
+- **Admin flag**: `isAdmin` field on `userProfiles/{email}`. Admin users see "Admin Settings" in settings page and can toggle any user's tier.
 - **Provider pattern**: `subscriptionServiceProvider` is a plain `Provider<SubscriptionService>`. `isProProvider` is `StreamProvider<bool>` reading from `service.isProStream`.
 - **Sync bool access**: `ref.read(subscriptionServiceProvider).isPro` in event handlers.
 - **Reactive bool**: `ref.watch(isProProvider).valueOrNull ?? false` in build methods.
-- **Purchase**: `Purchases.purchase(PurchaseParams.package(package))` returns `PurchaseResult` with `.customerInfo`. Do NOT call `Purchases.purchasePackage()` directly (RevenueCat v9 deprecation) — use `subscriptionService.purchasePackage(pkg)` which wraps the new API.
-- **`ChangeNotifierProvider` does NOT have `.overrideWithValue()`** — use plain `Provider` instead of `ChangeNotifierProvider` for DI overrides.
-- **`PricingView`** (`lib/screens/pricing_view.dart`) — shows offerings from `offerings.current!.availablePackages`, calls `subscriptionService.purchasePackage(pkg)`.
+- **`isAdminProvider`**: `StreamProvider<bool>` for admin flag.
+- **`tierProvider`**: `StreamProvider<String>` for current user's tier.
+- **`PricingView`** (`lib/screens/pricing_view.dart`) — shows current tier and upgrade buttons. Sets Firestore `tier` field directly.
+- **`AdminSettingsView`** (`lib/screens/admin_settings_view.dart`) — entry point for admin-only settings.
+- **`ManageUsersView`** (`lib/screens/manage_users_view.dart`) — lists all users from `userProfiles` collection, dropdown to change each user's tier.
+- **No RevenueCat** — the system uses Firestore directly with no third-party purchase SDK. All "upgrades" are free tier changes managed by admins.
+- **DI override**: `subscriptionServiceProvider.overrideWithValue(subService)` in `main.dart`.
+- **`ChangeNotifierProvider` does NOT have `.overrideWithValue()`** — use plain `Provider` instead.
 
 ## AI Service
 

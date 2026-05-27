@@ -36,7 +36,7 @@ class UpdateController {
       final url = Uri.parse(
         'https://raw.githubusercontent.com/$repoPath/$branch/app_version.json',
       );
-      final response = await http.get(url);
+      final response = await http.get(url).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

@@ -1,6 +1,7 @@
 String csvEscape(String s) {
+  s = s.replaceAll('"', '""');
   if (s.isNotEmpty && ['=', '+', '-', '@'].contains(s[0])) {
-    s = '\t$s';
+    s = s.replaceFirst(RegExp(r'^[=+\-@]+'), '');
   }
-  return '"${s.replaceAll('"', '""')}"';
+  return '"$s"';
 }

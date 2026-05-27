@@ -436,13 +436,13 @@ class _TaskRowState extends ConsumerState<_TaskRow> {
                       AnimatedCrossFade(
                         firstChild: const SizedBox.shrink(),
                         secondChild: Column(
-                          children: task.subtasks!.asMap().entries.map<Widget>((entry) {
+                          children: (task.subtasks ?? []).asMap().entries.map<Widget>((entry) {
                           final i = entry.key;
                           final subtask = entry.value;
                           final isDone = subtask['done'] == true;
                           return GestureDetector(
                             onTap: () async {
-                              final updatedSubtasks = task.subtasks!
+                              final updatedSubtasks = (task.subtasks ?? [])
                                   .map((s) => Map<String, dynamic>.from(s))
                                   .toList();
                               updatedSubtasks[i]['done'] = !isDone;

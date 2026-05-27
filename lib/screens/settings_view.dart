@@ -12,6 +12,7 @@ import 'stats_view.dart';
 import 'templates_view.dart';
 import 'pomodoro_view.dart';
 import 'pricing_view.dart';
+import 'admin_settings_view.dart';
 import 'ai_model_view.dart';
 import '../providers/providers.dart';
 import '../utils/app_colors.dart';
@@ -93,6 +94,7 @@ class SettingsView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isPro = ref.watch(isProProvider).valueOrNull ?? false;
+    final tier = ref.watch(tierProvider).valueOrNull ?? 'free';
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
@@ -135,7 +137,7 @@ class SettingsView extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          isPro ? 'You\'re on Pro' : 'Upgrade to Pro',
+                          isPro ? 'Subscription — ${tier == "proMax" ? "Pro Max" : "Pro"}' : 'Subscription — Free',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -143,7 +145,7 @@ class SettingsView extends ConsumerWidget {
                           ),
                         ),
                         Text(
-                          isPro ? 'All premium features unlocked' : 'Unlock AI, templates, stats & more',
+                          isPro ? 'Premium features active' : 'Basic plan — contact admin to upgrade',
                           style: TextStyle(
                             fontSize: 13,
                             color: isPro ? Colors.grey.shade500 : Colors.white70,
@@ -186,6 +188,20 @@ class SettingsView extends ConsumerWidget {
                   trailing: const Icon(Icons.chevron_right, color: Colors.grey),
                   onTap: () => Get.to(() => const AccountProfileView()),
                 ),
+                Consumer(builder: (context, ref, _) {
+                  final isAdmin = ref.watch(isAdminProvider).valueOrNull ?? false;
+                  if (!isAdmin) return const SizedBox.shrink();
+                  return Column(children: [
+                    const Divider(height: 1, indent: 60),
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                      leading: Icon(Icons.admin_panel_settings_outlined, color: Colors.amber.shade700),
+                      title: Text('Admin Settings', style: TextStyle(fontWeight: FontWeight.w500, color: Colors.amber.shade700)),
+                      trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+                      onTap: () => Get.to(() => const AdminSettingsView()),
+                    ),
+                  ]);
+                }),
                 const Divider(height: 1, indent: 60),
                 _buildProGate(ref, ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),

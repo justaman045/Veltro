@@ -275,7 +275,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                                 Align(
                                   alignment: Alignment.centerRight,
                                   child: TextButton(
-                                    onPressed: () {
+                                    onPressed: () async {
                                       final email = emailController.text.trim();
                                       if (email.isEmpty) {
                                         Get.snackbar('Email Required', 'Enter your email address first.',
@@ -283,10 +283,16 @@ class _LoginViewState extends ConsumerState<LoginView> {
                                             colorText: Colors.black87);
                                         return;
                                       }
-                                      FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-                                      Get.snackbar('Reset Link Sent', 'Check your email inbox.',
-                                          snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.white.withValues(alpha: 0.9),
-                                          colorText: Colors.black87);
+                                      try {
+                                        await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+                                        Get.snackbar('Reset Link Sent', 'Check your email inbox.',
+                                            snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.white.withValues(alpha: 0.9),
+                                            colorText: Colors.black87);
+                                      } catch (e) {
+                                        Get.snackbar('Reset Failed', e.toString().replaceAll('Exception: ', ''),
+                                            snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
+                                            colorText: Colors.white);
+                                      }
                                     },
                                     child: Text('Forgot Password?',
                                         style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 13)),

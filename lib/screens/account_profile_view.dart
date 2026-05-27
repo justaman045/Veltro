@@ -62,7 +62,8 @@ class _AccountProfileViewState extends ConsumerState<AccountProfileView> {
   Widget build(BuildContext context) {
     final user = ref.watch(authServiceProvider).currentUser;
     final profileDataAsync = ref.watch(userProfileDataProvider);
-    final isPro = ref.watch(isProProvider).valueOrNull ?? false;
+    final tier = ref.watch(tierProvider).valueOrNull ?? 'free';
+    final isPro = tier == 'pro' || tier == 'proMax';
 
     final displayName = user?.displayName ?? 'Hi User';
     final email = user?.email ?? 'Unknown Email';
@@ -153,7 +154,7 @@ class _AccountProfileViewState extends ConsumerState<AccountProfileView> {
                         Text('Subscription Plan', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.grey)),
                         const SizedBox(height: 4),
                         Text(
-                          isPro ? 'Pro' : 'Free',
+                          tier == 'proMax' ? 'Pro Max' : isPro ? 'Pro' : 'Free',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,

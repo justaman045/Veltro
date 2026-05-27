@@ -183,6 +183,14 @@ class _TaskEntryDialogState extends ConsumerState<TaskEntryDialog> {
         }
       });
 
+      final nlpResult = NlpParser.parse(text);
+      if (nlpResult.date != null || nlpResult.time != null) {
+        setState(() {
+          if (nlpResult.date != null) _selectedDate = nlpResult.date;
+          if (nlpResult.time != null) _timeOfDay = nlpResult.time;
+        });
+      }
+
       Get.snackbar('AI Parsed!', 'Category, priority, and schedule detected.',
           snackPosition: SnackPosition.TOP, backgroundColor: Colors.black87,
           colorText: Colors.white, margin: const EdgeInsets.all(16),

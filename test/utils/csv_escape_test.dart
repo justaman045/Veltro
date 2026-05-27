@@ -11,20 +11,20 @@ void main() {
       expect(csvEscape('say "hello"'), '"say ""hello"""');
     });
 
-    test('prefixes leading = with tab', () {
-      expect(csvEscape('=SUM(A1:A10)'), '"\t=SUM(A1:A10)"');
+    test('strips leading =', () {
+      expect(csvEscape('=SUM(A1:A10)'), '"SUM(A1:A10)"');
     });
 
-    test('prefixes leading + with tab', () {
-      expect(csvEscape('+cmd'), '"\t+cmd"');
+    test('strips leading +', () {
+      expect(csvEscape('+cmd'), '"cmd"');
     });
 
-    test('prefixes leading - with tab', () {
-      expect(csvEscape('-1+2'), '"\t-1+2"');
+    test('strips leading -', () {
+      expect(csvEscape('-1+2'), '"1+2"');
     });
 
-    test('prefixes leading @ with tab', () {
-      expect(csvEscape('@domain.com'), '"\t@domain.com"');
+    test('strips leading @', () {
+      expect(csvEscape('@domain.com'), '"domain.com"');
     });
 
     test('does not prefix = in middle of string', () => expect(csvEscape('a=b'), '"a=b"'));

@@ -317,12 +317,57 @@ class DbService {
     );
   }
 
-  // ─── Profile ─────────────────────────────────────────────────────────────
+  // ─── Profile & Subscriptions ──────────────────────────────────────────────
+
+  DocumentReference<Map<String, dynamic>> _userDoc(String email) =>
+      FirebaseFirestore.instance.collection('users').doc(email);
+
+  DocumentReference<Map<String, dynamic>> _profileDoc(String email) =>
+      FirebaseFirestore.instance.collection('userProfiles').doc(email);
 
   Future<void> saveProfileData(Map<String, dynamic> data) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || user.email == null) return;
-    await FirebaseFirestore.instance.collection('users').doc(user.email).set(data, SetOptions(merge: true));
+    await _userDoc(user.email!).set(data, SetOptions(merge: true));
+  }
+
+  Future<Map<String, dynamic>?> getUserDocData(String email) async {
+    final doc = await _userDoc(email).get();
+    return doc.exists ? doc.data() : null;
+  }
+
+  Stream<Map<String, dynamic>?> watchUserProfile(String email) {
+    return _profileDoc(email).snapshots().map((doc) => doc.exists ? doc.data() : null);
+  }
+
+  Future<Map<String, dynamic>?> getUserProfile(String email) async {
+    final doc = await _profileDoc(email).get();
+    return doc.exists ? doc.data() : null;
+  }
+
+  Future<List<Map<String, dynamic>>> getAllUserProfiles() async {
+    final snapshot = await FirebaseFirestore.instance.collection('userProfiles').get();
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      data['_email'] = doc.id;
+      return data;
+    }).toList();
+  }
+
+  Future<void> setUserTier(String email, String tier) async {
+    await _profileDoc(email).set({'tier': tier}, SetOptions(merge: true));
+  }
+
+  Future<void> setAdminFlag(String email, bool isAdmin) async {
+    await _profileDoc(email).set({'isAdmin': isAdmin}, SetOptions(merge: true));
+  }
+
+  Future<void> ensureProfileDoc(String email) async {
+    final doc = _profileDoc(email);
+    final snap = await doc.get();
+    if (!snap.exists) {
+      await doc.set({'tier': 'free', 'isAdmin': false});
+    }
   }
 
   Future<void> clearAllData() async {

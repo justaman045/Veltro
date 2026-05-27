@@ -1,94 +1,94 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../services/db_service.dart';
 
 class SubscriptionService {
   static final SubscriptionService _instance = SubscriptionService._();
   factory SubscriptionService() => _instance;
   SubscriptionService._();
 
-  static const String _proEntitlementId = 'pro';
+  String _tier = 'free';
+  bool _isAdmin = false;
 
-  bool _isPro = false;
-  bool get isPro => _isPro;
+  final _tierController = StreamController<String>.broadcast();
+  final _isAdminController = StreamController<bool>.broadcast();
 
-  final _isProController = StreamController<bool>.broadcast();
-  Stream<bool> get isProStream => _isProController.stream;
+  String get tier => _tier;
+  bool get isPro => _tier == 'pro' || _tier == 'proMax';
+  bool get isProMax => _tier == 'proMax';
+  bool get isAdmin => _isAdmin;
 
-  bool _initialized = false;
+  Stream<String> get tierStream => _tierController.stream;
+  Stream<bool> get isProStream => _tierController.stream.map((t) => t == 'pro' || t == 'proMax');
+  Stream<bool> get isAdminStream => _isAdminController.stream;
 
-  Future<void> init({required String apiKey, String? appUserId}) async {
-    if (_initialized) return;
-    await Purchases.setLogLevel(LogLevel.debug);
-    final config = PurchasesConfiguration(apiKey);
-    config.appUserID = appUserId;
-    await Purchases.configure(config);
-    _initialized = true;
-    final info = await Purchases.getCustomerInfo();
-    _updateStatus(info);
-    Purchases.addCustomerInfoUpdateListener((customerInfo) {
-      _updateStatus(customerInfo);
+  StreamSubscription? _profileSub;
+  StreamSubscription? _authSub;
+  DbService? _db;
+
+  Future<void> init(DbService db) async {
+    _db = db;
+    await _setupForCurrentUser();
+    _authSub = FirebaseAuth.instance.authStateChanges().listen((_) {
+      _setupForCurrentUser();
     });
   }
 
-  void _updateStatus(CustomerInfo info) {
-    _isPro = info.entitlements.all[_proEntitlementId]?.isActive == true;
-    _isProController.add(_isPro);
+  Future<void> _setupForCurrentUser() async {
+    _profileSub?.cancel();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || user.email == null) {
+      _tier = 'free';
+      _isAdmin = false;
+      _tierController.add(_tier);
+      _isAdminController.add(false);
+      return;
+    }
+
+    await _db!.ensureProfileDoc(user.email!);
+
+    try {
+      final profile = await _db!.getUserProfile(user.email!);
+      if (profile != null) {
+        _tier = profile['tier']?.toString() ?? 'free';
+        _isAdmin = profile['isAdmin'] == true;
+      }
+    } catch (e) {
+      debugPrint('Failed to read profile: $e');
+    }
+    _tierController.add(_tier);
+    _isAdminController.add(_isAdmin);
+
+    _profileSub = _db!.watchUserProfile(user.email!).listen((data) {
+      if (data == null) {
+        _tier = 'free';
+        _isAdmin = false;
+      } else {
+        _tier = data['tier']?.toString() ?? 'free';
+        _isAdmin = data['isAdmin'] == true;
+      }
+      _tierController.add(_tier);
+      _isAdminController.add(_isAdmin);
+    }, onError: (e, st) {
+      debugPrint('Profile stream error: $e');
+    });
   }
 
-  Future<Offerings?> getOfferings() async {
-    try {
-      return await Purchases.getOfferings();
-    } catch (e) {
-      debugPrint('Failed to load offerings: $e');
-      return null;
-    }
+  Future<void> setTier(String email, String newTier) async {
+    if (!_isAdmin || _db == null) return;
+    await _db!.setUserTier(email, newTier);
   }
 
-  Future<CustomerInfo> purchasePackage(Package package) async {
-    try {
-      final result = await Purchases.purchase(
-        PurchaseParams.package(package),
-      );
-      _updateStatus(result.customerInfo);
-      return result.customerInfo;
-    } catch (e) {
-      debugPrint('Purchase failed: $e');
-      rethrow;
-    }
-  }
-
-  Future<CustomerInfo?> restorePurchases() async {
-    try {
-      final info = await Purchases.restorePurchases();
-      _updateStatus(info);
-      return info;
-    } catch (e) {
-      debugPrint('Restore purchases failed: $e');
-      return null;
-    }
-  }
-
-  Future<void> logout() async {
-    try {
-      await Purchases.logOut();
-    } catch (e) {
-      debugPrint('RevenueCat logout failed: $e');
-    }
-    _isPro = false;
-    _isProController.add(false);
-  }
-
-  Future<void> login(String appUserId) async {
-    try {
-      final result = await Purchases.logIn(appUserId);
-      _updateStatus(result.customerInfo);
-    } catch (e) {
-      debugPrint('RevenueCat login failed: $e');
-    }
+  Future<void> setAdmin(String email, bool isAdmin) async {
+    if (!_isAdmin || _db == null) return;
+    await _db!.setAdminFlag(email, isAdmin);
   }
 
   void dispose() {
-    _isProController.close();
+    _profileSub?.cancel();
+    _authSub?.cancel();
+    _tierController.close();
+    _isAdminController.close();
   }
 }

@@ -12,7 +12,6 @@ class AiBriefingCard extends ConsumerStatefulWidget {
 
 class _AiBriefingCardState extends ConsumerState<AiBriefingCard> {
   bool _expanded = true;
-  bool _hasTrackedUsage = false;
 
   @override
   Widget build(BuildContext context) {
@@ -23,14 +22,6 @@ class _AiBriefingCardState extends ConsumerState<AiBriefingCard> {
       error: (_, _) => const SizedBox.shrink(),
       data: (briefing) {
         if (briefing.isEmpty) return const SizedBox.shrink();
-
-        if (!_hasTrackedUsage) {
-          _hasTrackedUsage = true;
-          final isPro = ref.read(subscriptionServiceProvider).isPro;
-          if (!isPro) {
-            ref.read(aiUsageCountProvider.notifier).state++;
-          }
-        }
 
         final isDark = Theme.of(context).brightness == Brightness.dark;
 
