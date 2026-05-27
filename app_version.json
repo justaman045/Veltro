@@ -1,5 +1,5 @@
 {
-  "version": "1.0.3+4",
-  "changelog": "- feat: replace RevenueCat with Firestore-backed admin-managed subscriptions",
-  "downloadUrl": "https://github.com/justaman045/Agentic-TODO/releases/download/v1.0.3+4/app-arm64-v8a-release.apk"
+  "version": "1.0.4+5",
+  "changelog": "- chore: enable patch bump for CI release\n- fix: add openid scope to Google sign-in, remove stale auth guard",
+  "downloadUrl": "https://github.com/justaman045/Agentic-TODO/releases/download/v1.0.4+5/app-arm64-v8a-release.apk"
 }
