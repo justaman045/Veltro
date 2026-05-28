@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+// Shared animation constants
+const kAnimFast = Duration(milliseconds: 200);
+const kAnimNormal = Duration(milliseconds: 350);
+const kAnimSlow = Duration(milliseconds: 500);
+const kCurveSpring = Curves.easeOutBack;
+const kCurveBounce = Curves.elasticOut;
+const kCurveSmooth = Curves.easeInOutCubic;
+
 Duration animDuration(BuildContext context, {required int ms}) {
   if (MediaQuery.of(context).disableAnimations) return Duration.zero;
   return Duration(milliseconds: ms);

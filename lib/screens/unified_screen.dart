@@ -25,6 +25,7 @@ class UnifiedScreen extends ConsumerStatefulWidget {
 
 class _UnifiedScreenState extends ConsumerState<UnifiedScreen> {
   int _currentIndex = 0;
+  double _fabScale = 1.0;
 
   @override
   void initState() {
@@ -129,6 +130,13 @@ class _UnifiedScreenState extends ConsumerState<UnifiedScreen> {
         ),
       ),
       floatingActionButton: GestureDetector(
+        onTapDown: (_) => setState(() => _fabScale = 0.92),
+        onTapUp: (_) {
+          if (mounted) setState(() => _fabScale = 1.0);
+        },
+        onTapCancel: () {
+          if (mounted) setState(() => _fabScale = 1.0);
+        },
         onLongPress: () {
           Get.bottomSheet(
             Container(
@@ -188,21 +196,26 @@ class _UnifiedScreenState extends ConsumerState<UnifiedScreen> {
             ),
           );
         },
-        child: Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: context.primaryGradient,
-            boxShadow: [
-              BoxShadow(color: context.gradientPrimary.withValues(alpha: 0.3), blurRadius: 16, offset: const Offset(0, 8)),
-            ],
-          ),
-          child: FloatingActionButton(
-            onPressed: _openNewTask,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            shape: const CircleBorder(),
-            tooltip: 'Hold for more options',
-            child: const Icon(Icons.add, color: Colors.white, size: 30),
+        child: AnimatedScale(
+          scale: _fabScale,
+          duration: kAnimFast,
+          curve: Curves.easeInOut,
+          child: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: context.primaryGradient,
+              boxShadow: [
+                BoxShadow(color: context.gradientPrimary.withValues(alpha: 0.3), blurRadius: 16, offset: const Offset(0, 8)),
+              ],
+            ),
+            child: FloatingActionButton(
+              onPressed: _openNewTask,
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              shape: const CircleBorder(),
+              tooltip: 'Hold for more options',
+              child: const Icon(Icons.add, color: Colors.white, size: 30),
+            ),
           ),
         ),
       ),

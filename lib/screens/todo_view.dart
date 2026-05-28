@@ -731,14 +731,21 @@ class _TodoCard extends ConsumerWidget {
                   decoration: BoxDecoration(color: priorityColor, borderRadius: BorderRadius.circular(2)),
                 ),
                 // Checkbox
-                Container(
+                AnimatedContainer(
+                  duration: kAnimNormal,
+                  curve: Curves.easeInOut,
                   width: 24, height: 24,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(color: task.isCompleted ? accentColor : Colors.grey.withValues(alpha: 0.3), width: task.isCompleted ? 0 : 1.5),
                     color: task.isCompleted ? accentColor : Colors.transparent,
                   ),
-                  child: task.isCompleted ? const Icon(Icons.check_rounded, size: 18, color: Colors.white) : null,
+                  child: AnimatedScale(
+                    scale: task.isCompleted ? 1.0 : 0.0,
+                    duration: kAnimFast,
+                    curve: Curves.easeOutBack,
+                    child: const Icon(Icons.check_rounded, size: 18, color: Colors.white),
+                  ),
                 ),
                 const SizedBox(width: 12),
 

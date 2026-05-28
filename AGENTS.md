@@ -107,6 +107,15 @@
 - **AI task categories** — `TimeTask.category.name` values: `work`, `personal`, `health`, `finance`, `other` (no `growth`, no `urgent`). The AI service maps `growth` → `other`, `urgent` → `high`.
 - **API keys** — passed via `--dart-define-from-file=config.*.json` at build time. Local dev uses `config.dev.json` (gitignored). CI uses GitHub Secrets `REVENUECAT_API_KEY` and `OPENROUTER_API_KEY` injected at build time. No `defaultValue` — build fails with clear error if keys missing.
 - **`firestore.rules`** is checked in but NOT deployed by CI — deploy manually via Firebase Console or `firebase deploy --only firestore:rules`.
+## Dismissible + tight height constraints
+
+- **DO NOT** rely on `Positioned(height:)` or `SizedBox(height:)` wrapping a `TaskCard` (or any widget that internally uses `Dismissible`) to enforce tight height — `Dismissible` does NOT propagate tight constraints from its parent, causing the card to shrink to content height.
+- **Fix**: Pass `height` as a constructor parameter and apply `SizedBox(height: widget.height)` **inside** the `Dismissible`'s child subtree, wrapping the card `Container` directly.
+- **Lane overlap**: `_assignLanes` must use **visual bounds** (`_topForTime(start) + _taskHeight(task)`) instead of time-based bounds when `minTaskHeight` causes short tasks to visually extend past their end time. Otherwise expanded cards overlap.
+- **`minTaskHeight` rule**: set to `hourHeight` (72px) so 30-min tasks extend exactly to the next half-hour boundary without overlapping the next task. Content must be compact enough to fit within this height (tighten padding/fonts).
+
+## Key gotchas (continued)
+
 - **SHA-1 fingerprints**: Google sign-in requires fingerprints in Firebase Console.
   - Local release keystore: auto-printed by `./release-build.sh`
   - Local release keystore (`~/local_release.keystore`): `8E:9D:C5:CC:5F:6A:E9:E5:EB:A9:F8:FB:49:7F:05:BB:90:9D:10:40` (same keystore set as `KEYSTORE_BASE64` secret for CI)

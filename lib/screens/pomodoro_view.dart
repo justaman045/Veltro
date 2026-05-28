@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/pomodoro_controller.dart';
+import '../utils/animations.dart';
 import '../utils/app_colors.dart';
 
 class PomodoroView extends StatefulWidget {
@@ -104,40 +105,47 @@ class _PomodoroViewState extends State<PomodoroView> {
                   const SizedBox(height: 48),
 
                   // Circular timer
-                  SizedBox(
-                    width: 220,
-                    height: 220,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        SizedBox.expand(
-                          child: CircularProgressIndicator(
-                            value: controller.progress,
-                            strokeWidth: 10,
-                            backgroundColor: primaryColor.withValues(alpha: 0.12),
-                            valueColor: AlwaysStoppedAnimation(primaryColor),
-                          ),
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: controller.progress),
+                    duration: kAnimSlow,
+                    curve: Curves.easeInOut,
+                    builder: (context, value, _) {
+                      return SizedBox(
+                        width: 220,
+                        height: 220,
+                        child: Stack(
+                          alignment: Alignment.center,
                           children: [
-                            Text(
-                              controller.timeDisplay,
-                              style: TextStyle(
-                                fontSize: 52,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -2,
-                                color: Theme.of(context).colorScheme.onSurface,
+                            SizedBox.expand(
+                              child: CircularProgressIndicator(
+                                value: value,
+                                strokeWidth: 10,
+                                backgroundColor: primaryColor.withValues(alpha: 0.12),
+                                valueColor: AlwaysStoppedAnimation(primaryColor),
                               ),
                             ),
-                            Text(
-                              isBreak ? 'rest' : 'focus',
-                              style: TextStyle(fontSize: 14, color: primaryColor, fontWeight: FontWeight.w600),
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  controller.timeDisplay,
+                                  style: TextStyle(
+                                    fontSize: 52,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -2,
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                  ),
+                                ),
+                                Text(
+                                  isBreak ? 'rest' : 'focus',
+                                  style: TextStyle(fontSize: 14, color: primaryColor, fontWeight: FontWeight.w600),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 48),
 

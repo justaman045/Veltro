@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../models/time_task.dart';
 import '../providers/providers.dart';
+import '../utils/animations.dart';
 
 class CalendarView extends ConsumerStatefulWidget {
   final VoidCallback onSwitchToTimeline;
@@ -156,10 +157,22 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
               final totalCells = leadingEmpty + daysInMonth;
               final rows = (totalCells / 7).ceil();
 
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  children: List.generate(rows, (rowIndex) {
+              return AnimatedSwitcher(
+                duration: kAnimNormal,
+                transitionBuilder: (child, animation) {
+                  return SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0.15, 0),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
+                  );
+                },
+                child: Padding(
+                  key: ValueKey('grid_$_displayMonth'),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    children: List.generate(rows, (rowIndex) {
                     return Expanded(
                       child: Row(
                         children: List.generate(7, (colIndex) {
@@ -262,7 +275,8 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
                     );
                   }),
                 ),
-              );
+              ),
+            );
             },
           ),
         ),
