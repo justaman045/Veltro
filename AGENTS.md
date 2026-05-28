@@ -109,5 +109,5 @@
 - **`firestore.rules`** is checked in but NOT deployed by CI — deploy manually via Firebase Console or `firebase deploy --only firestore:rules`.
 - **SHA-1 fingerprints**: Google sign-in requires fingerprints in Firebase Console.
   - Local release keystore: auto-printed by `./release-build.sh`
-  - CI release keystore: `45:A2:16:C9:91:CD:79:16:05:EE:52:D2:0C:47:C7:48:C0:78:05:BB` (only applies if `KEYSTORE_BASE64` repo secret is set)
-  - CI debug keystore (`KEYSTORE_BASE64` not set): `8E:9D:C5:CC:5F:6A:E9:E5:EB:A9:F8:FB:49:7F:05:BB:90:9D:10:40` — CI skips release signing when secret is empty, falls back to debug keystore. Extract via: `keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android 2>&1 | grep "SHA-1"`
+  - Local release keystore (`~/local_release.keystore`): `8E:9D:C5:CC:5F:6A:E9:E5:EB:A9:F8:FB:49:7F:05:BB:90:9D:10:40` (same keystore set as `KEYSTORE_BASE64` secret for CI)
+  - CI debug keystore (`KEYSTORE_BASE64` not set): `C6:A7:98:39:5F:57:0B:D8:4C:A2:5A:61:1F:4F:7B:CB:E3:B9:A9:C0` — CI skips release signing when secret is empty, falls back to debug keystore. Extract via: `keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android 2>&1 | grep "SHA-1"`
