@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -28,12 +29,12 @@ class AuthService {
         );
       }
       rethrow;
+    } on GoogleSignInException catch (e) {
+      if (e.code == GoogleSignInExceptionCode.canceled) return null;
+      rethrow;
     } catch (e) {
-      final msg = e.toString().toLowerCase();
-      if (msg.contains('cancel') || msg.contains('canceled') || msg.contains('cancelled')) {
-        return null;
-      }
-      throw Exception('Failed to sign in with Google: $e');
+      debugPrint('Google sign-in error: $e');
+      rethrow;
     }
   }
 
