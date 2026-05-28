@@ -6,6 +6,7 @@
 |---------|---------|
 | `./run.sh` | run on device/emulator in debug mode (reads API keys from `config.dev.json`) |
 | `./testrun.sh` | run on device/emulator in release mode (reads API keys from `config.dev.json`) |
+| `./release-build.sh` | mimic CI locally: analyze + test + build release APK with release keystore (auto-creates if missing). Install with `adb install` and add SHA-1 to Firebase Console for Google sign-in. |
 | `./test.sh` | run all tests (no API keys needed) |
 | `flutter pub get` | install dependencies |
 | `flutter pub run build_runner build --delete-conflicting-outputs` | regenerate Riverpod `.g.dart` after editing providers |
