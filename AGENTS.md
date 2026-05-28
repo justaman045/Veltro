@@ -107,3 +107,4 @@
 - **AI task categories** — `TimeTask.category.name` values: `work`, `personal`, `health`, `finance`, `other` (no `growth`, no `urgent`). The AI service maps `growth` → `other`, `urgent` → `high`.
 - **API keys** — passed via `--dart-define-from-file=config.*.json` at build time. Local dev uses `config.dev.json` (gitignored). CI uses GitHub Secrets `REVENUECAT_API_KEY` and `OPENROUTER_API_KEY` injected at build time. No `defaultValue` — build fails with clear error if keys missing.
 - **`firestore.rules`** is checked in but NOT deployed by CI — deploy manually via Firebase Console or `firebase deploy --only firestore:rules`.
+- **SHA-1 fingerprints**: Google sign-in requires both fingerprints in Firebase Console. Local: auto-printed by `./release-build.sh`. CI: `~/Android/Sdk/build-tools/37.0.0-rc2/apksigner verify --print-certs <apk-file> | grep "SHA-1"`
