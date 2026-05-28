@@ -4,13 +4,15 @@
 
 | Command | Purpose |
 |---------|---------|
-| `./run.sh` | run on device/emulator (reads API keys from `config.dev.json`) |
+| `./run.sh` | run on device/emulator in debug mode (reads API keys from `config.dev.json`) |
+| `./testrun.sh` | run on device/emulator in release mode (reads API keys from `config.dev.json`) |
 | `./test.sh` | run all tests (no API keys needed) |
 | `flutter pub get` | install dependencies |
 | `flutter pub run build_runner build --delete-conflicting-outputs` | regenerate Riverpod `.g.dart` after editing providers |
 | `flutter analyze` | lint check (warnings exit non-zero — they fail CI) |
 | `flutter test` | run all tests (alias: `./test.sh`) |
 | `flutter run --dart-define-from-file=config.dev.json` | same as `./run.sh` (manual equivalent) |
+| `flutter run --release --dart-define-from-file=config.dev.json` | same as `./testrun.sh` (manual equivalent) |
 | `flutter build apk --release --dart-define-from-file=config.prod.json` | local release build with production keys |
 
 ## Architecture

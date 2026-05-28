@@ -20,6 +20,14 @@ class AuthService {
       return await _auth.signInWithCredential(
         GoogleAuthProvider.credential(idToken: idToken),
       );
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'account-exists-with-different-credential') {
+        throw Exception(
+          'This email is already registered with a password. '
+          'Please sign in using your email and password instead.'
+        );
+      }
+      rethrow;
     } catch (e) {
       final msg = e.toString().toLowerCase();
       if (msg.contains('cancel') || msg.contains('canceled') || msg.contains('cancelled')) {

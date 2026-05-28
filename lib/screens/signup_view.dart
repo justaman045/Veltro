@@ -71,8 +71,20 @@ class _SignUpViewState extends ConsumerState<SignUpView> {
       // the authStateChanges stream missed the sign-in event (Credential Manager race)
       if (mounted) ref.invalidate(authStateProvider);
     } catch (e) {
-      Get.snackbar('Registration Failed', e.toString().replaceAll('Exception: ', ''),
-          snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.redAccent, colorText: Colors.white);
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('Sign In Failed'),
+          content: Text(e.toString().replaceAll('Exception: ', '')),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
