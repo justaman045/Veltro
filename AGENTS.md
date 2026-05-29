@@ -120,3 +120,66 @@
   - Local release keystore: auto-printed by `./release-build.sh`
   - Local release keystore (`~/local_release.keystore`): `8E:9D:C5:CC:5F:6A:E9:E5:EB:A9:F8:FB:49:7F:05:BB:90:9D:10:40` (same keystore set as `KEYSTORE_BASE64` secret for CI)
   - CI debug keystore (`KEYSTORE_BASE64` not set): `C6:A7:98:39:5F:57:0B:D8:4C:A2:5A:61:1F:4F:7B:CB:E3:B9:A9:C0` — CI skips release signing when secret is empty, falls back to debug keystore. Extract via: `keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android 2>&1 | grep "SHA-1"`
+
+## Animation System
+
+### Shared Constants (`lib/utils/animations.dart`)
+
+```dart
+const kAnimFast = Duration(milliseconds: 200);
+const kAnimNormal = Duration(milliseconds: 350);
+const kAnimSlow = Duration(milliseconds: 500);
+const kCurveSpring = Curves.easeOutBack;
+const kCurveBounce = Curves.elasticOut;
+const kCurveSmooth = Curves.easeInOutCubic;
+```
+
+Existing helpers: `animDuration(context, ms:)` (respects `disableAnimations`), `AnimatedContext.animateIfEnabled()` extension, `fadeSlideIn()`, `scaleIn()`.
+
+### Animation Library Choice
+
+- **Primary**: `flutter_animate` — for one-shot entrance/exit effects (staggered list appearance, page entrances). Already imported in 5 files.
+- **State-driven transitions**: Use built-in `AnimatedContainer`, `AnimatedScale`, `AnimatedSwitcher`, `TweenAnimationBuilder` — these persist across rebuilds and don't retrigger on every frame.
+- **Rule**: `flutter_animate` for entry animations; `Animated*` widgets for toggle/state transitions.
+
+### Phase 1 — Quick Wins (Implemented)
+
+| File | Animation | Mechanism |
+|------|-----------|-----------|
+| `lib/widgets/task_card.dart` | Checkmark pop on complete | `AnimatedContainer` (fill/border) + `AnimatedScale` (icon 0→1 with `easeOutBack`) |
+| `lib/screens/todo_view.dart` | Checkbox fill + check pop | Same pattern as task_card |
+| `lib/widgets/day_view.dart` | Drop zone highlight fade | `AnimatedContainer` on DragTarget builder decoration |
+| `lib/screens/unified_screen.dart` | FAB press scale | `AnimatedScale` with `onTapDown`(0.92)→`onTapUp`(1.0) via setState |
+| `lib/screens/calendar_view.dart` | Month slide transition | `AnimatedSwitcher` + `SlideTransition` with `ValueKey('grid_$_displayMonth')` |
+| `lib/screens/pomodoro_view.dart` | Smooth progress arc | `TweenAnimationBuilder<double>` wrapping `CircularProgressIndicator` |
+
+### Phase 2 — Core UX Polish (Planned)
+
+| File | Animation | Approach |
+|------|-----------|----------|
+| `lib/widgets/day_view.dart` | Current time indicator | `AnimatedPositioned` red line at `DateTime.now()`, updated by `Timer.periodic(60s)` |
+| `lib/screens/stats_view.dart` | Chart entrance animations | `fl_chart` built-in `fromY: 0` + animate duration |
+| `lib/widgets/ai_task_breakdown_sheet.dart` | Staggered task appearance | Generated list items with `.fadeIn().slideY()` staggered 50ms |
+| `lib/screens/pomodoro_view.dart` | Focus↔Break color transition | `AnimatedContainer` on phase label background |
+| `lib/widgets/task_card.dart` | Overdue label pulse | `.animate().shimmer()` on overdue text |
+
+### Phase 3 — Premium Feel (Planned)
+
+| File | Animation | Approach |
+|------|-----------|----------|
+| `lib/screens/calendar_view.dart` | Today cell pulse | `.animate().scale()` repeating on today's date cell |
+| `lib/screens/todo_view.dart` | Progress bars animated | `TweenAnimationBuilder<double>` for subtask `LinearProgressIndicator` |
+| `lib/widgets/task_entry_dialog.dart` | Subtask list animations | `AnimatedList` for add/remove |
+| `lib/screens/templates_view.dart` | Staggered item entrance | `.fadeIn().slideY()` on template cards at load |
+| `lib/screens/stats_view.dart` | Number counting animation | `TweenAnimationBuilder<int>` on stat card values |
+| `lib/screens/onboarding_view.dart` | Per-page content stagger | Icon → title → description with delayed fade+scale |
+
+### Animation Gotchas
+
+- **`Obx` + `TweenAnimationBuilder`**: Inside `Obx(() { ... })`, the entire subtree rebuilds on every observable change. A `TweenAnimationBuilder` inside will restart its tween each rebuild. Use a `key` that only changes on state transitions (e.g., `ValueKey('progress_${isBreak}')`) to prevent retriggering on every frame.
+- **`AnimatedSwitcher` keying**: `AnimatedSwitcher` detects child changes via `Key`. Always provide a `ValueKey` on the child that changes when the content changes (e.g., `ValueKey('grid_$_displayMonth')`). Without it, the switcher won't animate.
+- **`AnimatedContainer` with `null` decoration**: `AnimatedContainer` cannot tween to/from `null` decoration. If your state switches between a `BoxDecoration` and `null`, provide an empty `BoxDecoration()` instead of `null` so the container can interpolate.
+- **FAB press + `GestureDetector`**: Adding `onTapDown`/`onTapUp` to a `GestureDetector` that wraps a `FloatingActionButton` works for scale animation. The `FloatingActionButton`'s internal `onPressed` fires on tap-up, so the scale is visible during the press. Always check `mounted` in `onTapUp`/`onTapCancel` callbacks to avoid calling `setState` after dispose.
+- **`Container` → `AnimatedContainer`**: Plain `Container` with conditional decoration (e.g., `color: isCompleted ? primary : transparent`) is instant. Replacing with `AnimatedContainer` with a `duration` gives a smooth fill transition. Include the `curve` parameter for polish.
+- **Border width animation**: `AnimatedContainer` supports animating `Border.width`. Use `width: isCompleted ? 0 : 2` for a smooth border disappearance.
+- **CircularProgressIndicator intrinsic animation**: `CircularProgressIndicator` redraws immediately on value change — it does NOT interpolate between values internally. For smooth transitions (e.g., session mode switch), wrap in `TweenAnimationBuilder<double>`.
