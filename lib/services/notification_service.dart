@@ -147,23 +147,31 @@ class NotificationService {
           matchDateTimeComponents: DateTimeComponents.dayOfMonthAndTime,
         );
       } else if (task.recurrence == RecurrenceType.weekdays) {
-        // B1 fix: was completely missing — schedule daily; UI handles weekday-only display
-        if (time.isBefore(tzNow)) time = time.add(const Duration(days: 1));
-        await _flutterLocalNotificationsPlugin.zonedSchedule(
-          id: _stableId(task.id),
-          title: 'Upcoming: ${task.title}',
-          body: 'Starting in 15 minutes',
-          scheduledDate: time,
-          notificationDetails: notifDetails,
-          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          matchDateTimeComponents: DateTimeComponents.time,
-        );
+        for (int w = DateTime.monday; w <= DateTime.friday; w++) {
+          var weekdayTime = DateTime(now.year, now.month, now.day, reminderTime.hour, reminderTime.minute);
+          int daysUntil = w - weekdayTime.weekday;
+          if (daysUntil < 0 || (daysUntil == 0 && weekdayTime.isBefore(now))) daysUntil += 7;
+          weekdayTime = weekdayTime.add(Duration(days: daysUntil));
+          final tzWeekday = tz.TZDateTime.from(weekdayTime, tz.local);
+          await _flutterLocalNotificationsPlugin.zonedSchedule(
+            id: _stableId('${task.id}_wd_$w'),
+            title: 'Upcoming: ${task.title}',
+            body: 'Starting in 15 minutes',
+            scheduledDate: tzWeekday,
+            notificationDetails: notifDetails,
+            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+            matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+          );
+        }
       }
     }
   }
 
   Future<void> cancelTaskNotification(String taskId) async {
     await _flutterLocalNotificationsPlugin.cancel(id: _stableId(taskId));
+    for (int w = DateTime.monday; w <= DateTime.friday; w++) {
+      await _flutterLocalNotificationsPlugin.cancel(id: _stableId('${taskId}_wd_$w'));
+    }
     _log('cancelTaskNotification: $taskId');
   }
 

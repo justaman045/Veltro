@@ -256,22 +256,7 @@ final templateTasksProvider =
 );
 
 typedef TemplateTasksRef = AutoDisposeStreamProviderRef<List<TimeTask>>;
-String _$dailyBriefingHash() => r'0b28043f67a0676a2d943abdb53dfb50012feb69';
-
-/// See also [dailyBriefing].
-@ProviderFor(dailyBriefing)
-final dailyBriefingProvider = AutoDisposeFutureProvider<String>.internal(
-  dailyBriefing,
-  name: r'dailyBriefingProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$dailyBriefingHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-typedef DailyBriefingRef = AutoDisposeFutureProviderRef<String>;
-String _$userProfileDataHash() => r'07c267d3103444a5152b2df13071b294af64ca79';
+String _$userProfileDataHash() => r'c73ce1fbcf928b9da19be5167993ebfb83f1340b';
 
 /// See also [userProfileData].
 @ProviderFor(userProfileData)

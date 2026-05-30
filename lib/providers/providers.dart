@@ -78,23 +78,6 @@ Stream<List<TimeTask>> templateTasks(TemplateTasksRef ref) {
 }
 
 @riverpod
-Future<String> dailyBriefing(DailyBriefingRef ref) async {
-  final aiService = ref.watch(aiServiceProvider);
-  final allTasks = await ref.watch(allTasksProvider.future);
-  final userName = ref.watch(authServiceProvider).currentUser?.displayName ?? 'there';
-
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-  final todayTasks = allTasks.where((t) {
-    if (t.startTime == null || t.isCompleted) return false;
-    final d = t.startTime!;
-    return d.year == today.year && d.month == today.month && d.day == today.day;
-  }).toList();
-
-  return aiService.dailyBriefing(todayTasks, userName);
-}
-
-@riverpod
 Future<Map<String, dynamic>?> userProfileData(UserProfileDataRef ref) async {
   final user = ref.watch(authServiceProvider).currentUser;
   if (user == null || user.email == null) return null;
