@@ -1,5 +1,5 @@
 # Next version bump type (uncomment ONE):
 #   major  - breaking / incompatible changes
 # minor  ← used for v1.1.0+9
-patch
+# patch  ← used for v1.1.1+10
 # patch  ← used for v1.0.7+8

@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0+9",
-  "changelog": "- ci: uncomment minor in VERSION_BUMP for animation feature release\n- feat: add Phase 1 UI animations - checkmark scale, drop zone fade, FAB press, month slide, pomodoro progress",
-  "downloadUrl": "https://github.com/justaman045/Agentic-TODO/releases/download/v1.1.0+9/app-arm64-v8a-release.apk"
+  "version": "1.1.1+10",
+  "changelog": "- fix: weekday notifications fire on weekends; AI briefing now on-tap\n- docs: add animation system guide to AGENTS.md",
+  "downloadUrl": "https://github.com/justaman045/Agentic-TODO/releases/download/v1.1.1+10/app-arm64-v8a-release.apk"
 }
