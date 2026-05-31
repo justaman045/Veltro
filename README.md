@@ -1,4 +1,4 @@
-# Agentic Todo
+# Veltro
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.11+-02569B?logo=flutter)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.11+-0175C2?logo=dart)](https://dart.dev)
@@ -8,7 +8,7 @@
 
 <!-- LATEST_RELEASE_START -->
 
-[![Download APK](https://img.shields.io/badge/Download_APK_v1.1.1+10-FCC624?style=for-the-badge&logo=android&logoColor=black)](https://github.com/justaman045/Agentic-TODO/releases/download/v1.1.1+10/app-arm64-v8a-release.apk)
+[![Download APK](https://img.shields.io/badge/Download_APK_v1.1.1+10-FCC624?style=for-the-badge&logo=android&logoColor=black)](https://github.com/justaman045/Veltro/releases/download/v1.1.1+10/app-arm64-v8a-release.apk)
 
 <!-- LATEST_RELEASE_END -->
 
@@ -167,8 +167,8 @@ lib/
 ### 1. Clone & install
 
 ```bash
-git clone https://github.com/justaman045/agentic-todo.git
-cd agentic-todo
+git clone https://github.com/justaman045/Veltro.git
+cd Veltro
 flutter pub get
 ```
 
