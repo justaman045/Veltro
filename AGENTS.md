@@ -183,3 +183,30 @@ Existing helpers: `animDuration(context, ms:)` (respects `disableAnimations`), `
 - **`Container` → `AnimatedContainer`**: Plain `Container` with conditional decoration (e.g., `color: isCompleted ? primary : transparent`) is instant. Replacing with `AnimatedContainer` with a `duration` gives a smooth fill transition. Include the `curve` parameter for polish.
 - **Border width animation**: `AnimatedContainer` supports animating `Border.width`. Use `width: isCompleted ? 0 : 2` for a smooth border disappearance.
 - **CircularProgressIndicator intrinsic animation**: `CircularProgressIndicator` redraws immediately on value change — it does NOT interpolate between values internally. For smooth transitions (e.g., session mode switch), wrap in `TweenAnimationBuilder<double>`.
+
+## Notifications
+
+### Recurring Task Notification Scheduling (`lib/services/notification_service.dart`)
+
+| Recurrence | OS Repeat Mode | Notes |
+|-----------|---------------|-------|
+| `none` | One-shot exact alarm | Fires 15 min before start time; skipped if past |
+| `daily` | `DateTimeComponents.time` | Repeats at same time every day |
+| `weekly` | `DateTimeComponents.dayOfWeekAndTime` | Repeats on same weekday |
+| `monthly` | `DateTimeComponents.dayOfMonthAndTime` | Repeats on same day of month |
+| `weekdays` | **5×** `DateTimeComponents.dayOfWeekAndTime` | One notification per weekday (Mon–Fri) |
+
+### Key Notification Gotchas
+
+- **`weekdays` must NOT use `DateTimeComponents.time`** — that fires daily including weekends. Instead schedule 5 separate notifications with `DateTimeComponents.dayOfWeekAndTime`, one per weekday (`DateTime.monday` through `DateTime.friday`).
+- **Unique notification IDs per weekday**: Use `_stableId('${task.id}_wd_$weekday')` so each weekday has its own OS-level notification slot.
+- **Cancellation**: `cancelTaskNotification` must cancel the old single ID (`_stableId(task.id)`) AND all 5 weekday IDs. For loops: `for (int w = DateTime.monday; w <= DateTime.friday; w++)`.
+- **OS-level repeat persists across app restarts**: `matchDateTimeComponents` is handled by the OS. Notifications continue firing even if the app is closed. Re-schedule on app launch via `saveTimeTask` calls if you need to change notification windows.
+
+## AI Briefing & Provider Cleanup
+
+### On-Tap vs Auto-Fetch Pattern
+
+- **Auto-fetch (old/bad)**: Using a Riverpod `FutureProvider` (e.g., `dailyBriefingProvider`) causes the AI to be called as soon as the widget mounts. This wastes AI quota and shows loading states unnecessarily.
+- **On-tap (correct)**: Use a `ConsumerStatefulWidget` with a mutable `_briefing` field and a `_generateBriefing()` method triggered by `onTap`. The idle state shows a button; the loading state shows a spinner; the result shows the content.
+- **Provider cleanup**: When removing a `@riverpod`-annotated function from `providers.dart`, always run `flutter pub run build_runner build --delete-conflicting-outputs` to regenerate `providers.g.dart`. The `.g.dart` file retains orphan providers if not regenerated, causing dead code.
